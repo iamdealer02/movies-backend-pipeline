@@ -1,0 +1,52 @@
+name: Deployment Workflow
+
+on:
+  push:
+    branches:
+      - release
+      - preprod
+      - prod
+      - dev
+
+jobs:
+  verify-build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run tests
+      run: npm test
+
+    - name: Build project
+      run: npm run build
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: verify-build
+    environment:
+      name: ${{ github.ref_name }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Deploy to EC2
+      uses: burnett01/rsync-deployments@5.1
+      with:
+        switches: -avzr --delete
+        path: ./*
+        remote_path: ${{ secrets.REMOTE_DIR }}
+        remote_host: ${{ secrets.REMOTE_HOST }}
+        remote_user: ${{ secrets.REMOTE_USER }}
+        remote_key: "${{ secrets.SSH_PRIVATE_KEY }}"
+    
