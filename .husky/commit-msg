@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+
+# get the commit message
+commit_message=$(cat "$1")
+
+# define the regex pattern first using the allowed types then the description
+conventional_commit_regex="^(feat|fix|test|chore)(\([a-zA-Z0-9_-]+\))?: .+"
+
+# check if commit message exists and if it follows the above regex
+if ! echo "$commit_message" | grep -iqE "$conventional_commit_regex"; then
+  echo "Error: Commit message does not follow Conventional Commits specification."
+  echo "Your commit message: $commit_message"
+  echo "Allowed types: 'feat', 'fix', 'test', 'chore'"
+  echo "Format: <type>(optional scope): <description>"
+  echo "Example -> feat(auth): added login feature"
+  exit 1
+fi
