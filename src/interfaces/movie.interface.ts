@@ -2,6 +2,7 @@ interface MovieInterface {
   movie_id: number;
   title: string;
   release_date: string;
+  rating: number;
   type: string;
   author: string;
   poster: string;
