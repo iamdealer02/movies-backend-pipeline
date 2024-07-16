@@ -1,21 +1,26 @@
 import chai, { expect } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import rewire from 'rewire';
-import logger from '../middleware/winston';
-import pool from '../boot/database/db_connect';
+// import rewire from 'rewire';
+import logger from '../../middleware/winston';
+import pool from '../../boot/database/db_connect';
+import request from 'supertest';
 import {
   GroupedMoviesInterface,
   MovieInterface,
-} from '../interfaces/movie.interface';
-chai.use(sinonChai);
-const sandbox = sinon.createSandbox();
-let moviesController = rewire('../controllers/movies.controller');
+} from '../../interfaces/movie.interface';
+import { App } from 'supertest/types';
+import rewire from 'rewire';
 
-describe('Testing movies controller', () => {
+const sandbox = sinon.createSandbox();
+chai.use(sinonChai);
+let registerCoreMiddleWare = rewire('../../boot/setup').registerCoreMiddleWare;
+
+describe('Testing movies routes', () => {
   let sampleMovies: { rows: MovieInterface[] };
   let sampleCategoryMovies: { rows: MovieInterface[] };
   let sampleMoviesGrouped: GroupedMoviesInterface;
+  let app: App;
   const category = 'Action';
 
   beforeEach(() => {
@@ -23,6 +28,7 @@ describe('Testing movies controller', () => {
     sandbox.stub(logger, 'info').returns(null);
     sandbox.stub(logger, 'http').returns(null);
 
+    app = registerCoreMiddleWare();
     sampleMovies = {
       rows: [
         {
@@ -140,81 +146,61 @@ describe('Testing movies controller', () => {
   });
 
   afterEach(() => {
-    moviesController = rewire('../controllers/movies.controller');
     sandbox.restore();
+    registerCoreMiddleWare = rewire('../../boot/setup').registerCoreMiddleWare;
   });
 
-  describe('Testing getMovies service', () => {
-    let req: { query: { category?: string } };
-    let res: { status: sinon.SinonStub };
-
-    beforeEach(() => {
-      res = { status: sandbox.stub().returns({ json: sandbox.stub() }) };
-    });
-
-    // Error tests
-    it('should log an error when a query error occurs (without category)', async () => {
-      req = { query: {} };
-      const error = new Error('error');
-      const poolStub = sandbox.stub(pool, 'query').throws(error);
-
-      await moviesController.getMovies(req, res);
-
-      expect(poolStub).to.have.been.calledOnce;
-      expect(poolStub).to.have.thrown(error);
-      expect(logger.error).to.have.been.calledWith(error.stack);
-      expect(res.status).to.have.been.calledWith(500);
-      expect(res.status().json).to.have.been.calledWith({
-        error: 'Exception occured while fetching movies',
-      });
-    });
-
-    it('should log an error when a query error occurs (with category)', async () => {
-      req = { query: { category: category } };
-      const error = new Error('error');
-      const poolStub = sandbox.stub(pool, 'query').throws(error);
-
-      await moviesController.getMovies(req, res);
-
-      expect(poolStub).to.have.been.calledOnce;
-      expect(poolStub).to.have.thrown(error);
-      expect(logger.error).to.have.been.calledWith(error.stack);
-      expect(res.status).to.have.been.calledWith(500);
-      expect(res.status().json).to.have.been.calledWith({
-        error: 'Exception occured while fetching movies',
-      });
-    });
-
-    // Success tests
-    it('should call getMoviesByCategory and return movies by category when category is passed', async () => {
-      req = { query: { category: category } };
-
-      const movieControllerMock = sandbox
-        .stub()
-        .resolves(sampleCategoryMovies.rows);
-      moviesController.__set__('getMoviesByCategory', movieControllerMock);
-
-      await moviesController.getMovies(req, res);
-
-      expect(movieControllerMock).to.have.been.calledWith(category);
-      expect(res.status).to.have.been.calledWith(200);
-      expect(res.status().json).to.have.been.calledWith({
-        movies: sampleCategoryMovies.rows,
-      });
-    });
-
-    it('should return all movies grouped when no category is passed', async () => {
-      req = { query: {} };
-
+  describe('GET /movies', () => {
+    it('should return all movies grouped by type', async () => {
       const poolStub = sandbox.stub(pool, 'query').resolves(sampleMovies);
-
-      await moviesController.getMovies(req, res);
-
+      const res = await request(app).get('/movies');
+      expect(res.status).to.be.equal(200);
+      expect(res.body).to.be.deep.equal({ movies: sampleMoviesGrouped });
       expect(poolStub).to.have.been.calledOnce;
-      expect(res.status).to.have.been.calledWith(200);
-      expect(res.status().json).to.have.been.calledWith({
-        movies: sampleMoviesGrouped,
+    });
+
+    it('should return movies by category', async () => {
+      const poolStub = sandbox
+        .stub(pool, 'query')
+        .resolves(sampleCategoryMovies);
+      const res = await request(app).get('/movies').query({ category });
+      expect(res.status).to.be.equal(200);
+      expect(res.body).to.be.deep.equal({ movies: sampleCategoryMovies.rows });
+      expect(poolStub).to.have.been.calledOnceWith(sinon.match.any, [category]);
+    });
+
+    it('should return 500 if error occurs', async () => {
+      const poolStub = sandbox
+        .stub(pool, 'query')
+        .throws(new Error('Error occurred'));
+      const res = await request(app).get('/movies');
+      expect(res.status).to.be.equal(500);
+      expect(res.body).to.be.deep.equal({
+        error: 'Exception occured while fetching movies',
       });
+      expect(poolStub).to.have.been.calledOnce;
+    });
+  });
+
+  describe('GET /movies/top', () => {
+    it('should return top rated movies', async () => {
+      const poolStub = sandbox.stub(pool, 'query').resolves(sampleMovies);
+      const res = await request(app).get('/movies/top');
+      expect(res.status).to.be.equal(200);
+      expect(res.body).to.be.deep.equal({ movies: sampleMovies.rows });
+      expect(poolStub).to.have.been.calledOnce;
+    });
+
+    it('should return 500 if error occurs', async () => {
+      const poolStub = sandbox
+        .stub(pool, 'query')
+        .throws(new Error('Error occurred'));
+      const res = await request(app).get('/movies/top');
+      expect(res.status).to.be.equal(500);
+      expect(res.body).to.be.deep.equal({
+        error: 'Exception occured while fetching top rated movies',
+      });
+      expect(poolStub).to.have.been.calledOnce;
     });
   });
 });
