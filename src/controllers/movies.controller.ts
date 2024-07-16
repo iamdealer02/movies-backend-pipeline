@@ -1,12 +1,12 @@
 import pool from '../boot/database/db_connect';
-import logger from 'src/middleware/winston';
+import logger from '../middleware/winston';
 import { Request, Response } from 'express';
 import { QueryResult, QueryResultRow } from 'pg';
 import * as statusCodes from '../constants/statusCodes';
 import {
   MovieInterface,
   GroupedMoviesInterface,
-} from 'src/interfaces/movie.interface';
+} from '../interfaces/movie.interface';
 
 const getMovies = async (req: Request, res: Response): Promise<Response> => {
   const { category } = req.query as { category?: string };

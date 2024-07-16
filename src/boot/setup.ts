@@ -4,10 +4,10 @@ import helmet from 'helmet';
 import session from 'express-session';
 import morgan from 'morgan';
 
-import logger, { streamOptions } from 'src/middleware/winston';
+import logger, { streamOptions } from '../middleware/winston';
 
 // Routes
-import moviesRoutes from 'src/routes/movies.routes';
+import moviesRoutes from '../routes/movies.routes';
 
 const app: express.Application = express();
 const PORT: number = parseInt(process.env.PORT) || 3000;

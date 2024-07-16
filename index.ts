@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import startApp from 'src/boot/setup';
-import logger from 'src/middleware/winston';
+import startApp from './src/boot/setup';
+import logger from './src/middleware/winston';
 
 ((): void => {
   try {
