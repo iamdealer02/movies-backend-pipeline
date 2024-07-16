@@ -1,5 +1,6 @@
 import winston from 'winston';
 import { winstonOptions } from 'src/interfaces/loggerInterfaces';
+import morgan from 'morgan';
 
 const options: winstonOptions = {
   file: {
@@ -31,10 +32,12 @@ const logger: winston.Logger = winston.createLogger({
   exitOnError: false,
 });
 
-logger.stream({
-  write: function (message: string) {
+export const streamOptions: morgan.StreamOptions = {
+  write: (message: string) => {
     logger.info(message);
   },
-});
+};
+
+logger.stream(streamOptions);
 
 export default logger;
