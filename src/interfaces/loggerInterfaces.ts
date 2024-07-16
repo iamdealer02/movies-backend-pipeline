@@ -1,8 +1,8 @@
-import winston from 'winston'
+import winston from 'winston';
 
 interface winstonOptions extends winston.LoggerOptions {
-    file: winston.transports.FileTransportOptions;
-    console: winston.transports.ConsoleTransportOptions;
-  }
+  file: winston.transports.FileTransportOptions;
+  console: winston.transports.ConsoleTransportOptions;
+}
 
-export {winstonOptions}
+export { winstonOptions };
