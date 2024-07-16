@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import session from 'express-session';
@@ -9,10 +9,10 @@ import logger, { streamOptions } from '../middleware/winston';
 // Routes
 import moviesRoutes from '../routes/movies.routes';
 
-const app: express.Application = express();
+const app: Application = express();
 const PORT: number = parseInt(process.env.PORT) || 3000;
 
-const registerCoreMiddleWare = (): void => {
+const registerCoreMiddleWare = (): Application => {
   try {
     // using our session
     app.use(
@@ -36,6 +36,8 @@ const registerCoreMiddleWare = (): void => {
     app.use('/movies', moviesRoutes);
 
     logger.http('Done registering all middlewares');
+
+    return app;
   } catch (err) {
     logger.error('Error thrown while executing registerCoreMiddleWare');
     process.exit(1);
@@ -71,3 +73,4 @@ const startApp = (): void => {
 };
 
 export default startApp;
+export { registerCoreMiddleWare };
