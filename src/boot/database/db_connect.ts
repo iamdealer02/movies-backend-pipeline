@@ -1,5 +1,5 @@
 import pg from 'pg';
-import logger from 'src/middleware/winston';
+import logger from '../../middleware/winston';
 
 const db_config: pg.PoolConfig = {
   user: process.env.DB_USER,
