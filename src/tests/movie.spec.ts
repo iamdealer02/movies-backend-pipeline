@@ -197,7 +197,6 @@ describe('Testing movies controller', () => {
       await moviesController.getMovies(req, res);
 
       expect(movieControllerMock).to.have.been.calledWith(category);
-      // using 'match.any' to avoid checking the first argument (the query string)
       expect(res.status).to.have.been.calledWith(200);
       expect(res.status().json).to.have.been.calledWith({
         movies: sampleCategoryMovies.rows,
@@ -210,8 +209,8 @@ describe('Testing movies controller', () => {
       const poolStub = sandbox.stub(pool, 'query').resolves(sampleMovies);
 
       await moviesController.getMovies(req, res);
-      // using 'match.any' to avoid checking the first argument (the query string)
-      expect(poolStub).to.have.been.called;
+
+      expect(poolStub).to.have.been.calledOnce;
       expect(res.status).to.have.been.calledWith(200);
       expect(res.status().json).to.have.been.calledWith({
         movies: sampleMoviesGrouped,
