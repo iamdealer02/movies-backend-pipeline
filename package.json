@@ -7,7 +7,7 @@
     "start": "node ./dist/index.js",
     "lint": "eslint . --fix",
     "build": "tsc",
-    "test": "mocha ./src/tests/*.spec.ts --exit",
+    "test": "mocha ./src/tests/**/*.spec.ts --exit",
     "test:watch": "mocha --watch ./src/tests/*.spec.ts",
     "test:ci": "nyc --reporter=text npm test",
     "compile:dry": "npx tsc --noEmit",
