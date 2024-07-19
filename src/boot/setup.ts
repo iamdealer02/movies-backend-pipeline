@@ -1,9 +1,8 @@
-import express from 'express';
+import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import session from 'express-session';
 import morgan from 'morgan';
-import mongoose from 'mongoose';
 
 import logger, { streamOptions } from '../middleware/winston';
 
@@ -11,19 +10,10 @@ import logger, { streamOptions } from '../middleware/winston';
 import moviesRoutes from '../routes/movies.routes';
 import authRoutes from '../routes/auth.routes';
 
-// mongodb connection
-
-try {
-  mongoose.connect('mongodb://localhost:27017/epita');
-  logger.info('MongoDB Connected');
-} catch (error) {
-  logger.error('Error connecting to DB' + error);
-}
-
-const app: express.Application = express();
+const app: Application = express();
 const PORT: number = parseInt(process.env.PORT) || 3000;
 
-const registerCoreMiddleWare = (): void => {
+const registerCoreMiddleWare = (): Application => {
   try {
     // using our session
     app.use(
@@ -48,6 +38,8 @@ const registerCoreMiddleWare = (): void => {
     app.use('/auth', authRoutes);
 
     logger.http('Done registering all middlewares');
+
+    return app;
   } catch (err) {
     logger.error('Error thrown while executing registerCoreMiddleWare');
     process.exit(1);
@@ -83,3 +75,4 @@ const startApp = (): void => {
 };
 
 export default startApp;
+export { registerCoreMiddleWare };
