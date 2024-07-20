@@ -152,4 +152,81 @@ describe('Testing movies controller', () => {
       });
     });
   });
+
+  describe('Testing getSeenMovies service', () => {
+    let req: Request;
+    const res: Response = getMockRes().res;
+    const sampleEmail = 'test@test.com';
+
+    // Error tests
+    it('should log an error when a query error occurs', async () => {
+      req = getMockReq({ user: { email: sampleEmail } });
+      const error = new Error('error');
+      const poolMock = jest
+        .spyOn(pool, 'query')
+        .mockImplementation(async () => {
+          throw error;
+        });
+
+      await moviesController.getSeenMovies(
+        req as Request & { user: { email: string } },
+        res,
+      );
+
+      expect(poolMock).rejects.toThrow(error);
+      expect(logger.error).toHaveBeenCalledWith(error.stack);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Exception occured while fetching seen movies',
+      });
+    });
+
+    it('should log an error when a user in not present in request', async () => {
+      req = getMockReq();
+
+      await moviesController.getSeenMovies(
+        req as Request & { user: { email: string } },
+        res,
+      );
+
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Exception occured while fetching seen movies',
+      });
+    });
+
+    it('should log an error when a email in not present in request', async () => {
+      req = getMockReq({ user: {} });
+
+      await moviesController.getSeenMovies(
+        req as Request & { user: { email: string } },
+        res,
+      );
+
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Exception occured while fetching seen movies',
+      });
+    });
+
+    // Success tests
+    it('should return user seen movies', async () => {
+      req = getMockReq({ user: { email: sampleEmail } });
+      jest.spyOn(pool, 'query').mockImplementation(async () => {
+        return sampleMovies;
+      });
+
+      await moviesController.getSeenMovies(
+        req as Request & { user: { email: string } },
+        res,
+      );
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        movies: sampleMovies.rows,
+      });
+    });
+  });
 });
