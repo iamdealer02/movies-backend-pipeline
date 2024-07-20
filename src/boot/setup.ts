@@ -69,7 +69,7 @@ const handleError = (): void => {
 const startApp = (): void => {
   try {
     registerCoreMiddleWare();
-
+    connectToMongoDB();
     app.listen(PORT, (): void => {
       logger.info('Listening on 127.0.0.1:' + PORT);
     });
