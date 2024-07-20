@@ -201,4 +201,81 @@ describe('Testing auth endpoint', () => {
       expect(res.json).toHaveBeenCalledWith({ message: 'failed to save user' });
     });
   });
+  describe('Get user Route', () => {
+    // user details from _id saved in session
+    let req: CustomRequest;
+    let res: Response;
+    let FindStub: jest.SpyInstance;
+    const sampleUserValue: {
+      _id: IUser['_id'];
+      email: IUser['email'];
+      username: IUser['username'];
+      messages: IUser['messages'];
+      createdAt: IUser['createdAt'];
+      updatedAt: IUser['updatedAt'];
+    } = {
+      _id: new mongoose.Types.ObjectId(),
+      email: 'team@gmail.com',
+      username: 'team',
+      messages: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    beforeEach(() => {
+      req = getMockReq<CustomRequest>({
+        session: {
+          user: {
+            _id: sampleUserValue._id,
+            email: sampleUserValue.email,
+          },
+        },
+      });
+
+      res = getMockRes().res;
+
+      FindStub = jest
+        .spyOn(User, 'findById')
+        .mockResolvedValue(sampleUserValue);
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should give 500 authenticaion error', async () => {
+      req.session.user = null;
+      await authController.getUser(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'You are not authenticated',
+      });
+    });
+    it('should return user details', async () => {
+      await authController.getUser(req, res);
+
+      expect(FindStub).toHaveBeenCalledWith(sampleUserValue._id, {
+        password: 0,
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(sampleUserValue);
+    });
+    it('should return an error if user is not found', async () => {
+      FindStub.mockResolvedValue(null);
+
+      await authController.getUser(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'User not found' });
+    });
+    it('should return an error if mongoose fails', async () => {
+      FindStub.mockRejectedValue(new Error('Failed to get user'));
+
+      await authController.getUser(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to get user' });
+    });
+  });
 });
