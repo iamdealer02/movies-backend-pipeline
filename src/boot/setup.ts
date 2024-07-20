@@ -3,6 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import session from 'express-session';
 import morgan from 'morgan';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 import logger, { streamOptions } from '../middleware/winston';
 
@@ -12,6 +16,16 @@ import authRoutes from '../routes/auth.routes';
 
 const app: Application = express();
 const PORT: number = parseInt(process.env.PORT) || 3000;
+// mongoose connection
+
+try {
+  mongoose.connect(
+    `${process.env.MONGO_URI}/${process.env.MONGO_DB}` as string,
+  );
+  logger.info('Connected to MongoDB');
+} catch (err) {
+  logger.error(`Error connecting to MongoDB: ${err}`);
+}
 
 const registerCoreMiddleWare = (): Application => {
   try {

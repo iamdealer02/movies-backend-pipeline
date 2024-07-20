@@ -6,10 +6,13 @@ import { App } from 'supertest/types';
 import { jest } from '@jest/globals';
 import logger from '../../middleware/winston';
 
+
 // To avoid connecting to the database during testing and to avoid the open db error (openHandle error)
 jest.mock('../../boot/database/db_connect', () => ({
   query: jest.fn(),
 }));
+
+;
 
 // To avoid log statements in the console during tests and to close logger stream (openHandle error)
 jest.mock('../../middleware/winston', () => ({
@@ -18,6 +21,13 @@ jest.mock('../../middleware/winston', () => ({
   http: jest.fn(),
 }));
 jest.mock('../../controllers/auth.controller');
+
+import mongoose from 'mongoose';
+
+// to avoid the openHandle error
+afterAll(async () => {
+  await mongoose.connection.close();
+})
 
 describe('Testing auth endpoint', () => {
   afterEach(() => {
