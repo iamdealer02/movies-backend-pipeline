@@ -5,7 +5,7 @@ import { registerCoreMiddleWare } from '../../boot/setup';
 import { App } from 'supertest/types';
 import { jest } from '@jest/globals';
 import logger from '../../middleware/winston';
-
+import mongoose from 'mongoose';
 
 // To avoid connecting to the database during testing and to avoid the open db error (openHandle error)
 jest.mock('../../boot/database/db_connect', () => ({
@@ -21,7 +21,6 @@ jest.mock('../../middleware/winston', () => ({
 jest.mock('../../controllers/auth.controller');
 
 import { IUser } from 'src/interfaces/user.interface';
-
 
 describe('Testing auth endpoint', () => {
   let app: App;
@@ -158,6 +157,85 @@ describe('Testing auth endpoint', () => {
         .expect(500);
 
       expect(response.body).toEqual({ error: 'Server error' });
+    });
+  });
+  describe('Get user Route', () => {
+    let app: App;
+    let getUserFunc: jest.Mock;
+    let sampleUserValues: {
+      _id: IUser['_id'];
+      email: IUser['email'];
+      username: IUser['username'];
+      messages: IUser['messages'];
+      createdAt: IUser['createdAt'];
+      updatedAt: IUser['updatedAt'];
+    };
+
+    beforeEach(() => {
+      sampleUserValues = {
+        _id: new mongoose.Types.ObjectId(),
+        email: 'team@gmail.com',
+        username: 'team',
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      getUserFunc = authController.getUser as jest.Mock;
+      app = registerCoreMiddleWare();
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should return the user with 200 status code', async () => {
+      getUserFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(200).json(sampleUserValues),
+      );
+      // so that there is no error in comparing the response
+      const expectedResponse: {
+        _id: string;
+        email: string;
+        username: string;
+        messages: string[];
+        createdAt: string;
+        updatedAt: string;
+      } = {
+        ...sampleUserValues,
+        _id: sampleUserValues._id.toString(),
+        messages: sampleUserValues.messages.map((msg) => msg.toString()),
+        createdAt: sampleUserValues.createdAt.toISOString(),
+        updatedAt: sampleUserValues.updatedAt.toISOString(),
+      };
+      const response = await request(app).get('/auth/me').expect(200);
+      expect(response.body).toEqual(expectedResponse);
+    });
+
+    it('should return 500 status code if user is not authenticated', async () => {
+      getUserFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(500).json({ error: 'You are not authenticated' }),
+      );
+      const response = await request(app).get('/auth/me').expect(500);
+
+      expect(response.body).toEqual({ error: 'You are not authenticated' });
+    });
+
+    it('should return 500 status code if server error occurs', async () => {
+      getUserFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(500).json({ error: 'Failed to get user' }),
+      );
+      const response = await request(app).get('/auth/me').expect(500);
+
+      expect(response.body).toEqual({ error: 'Failed to get user' });
+    });
+
+    it('should return 400 status code if user is not found', async () => {
+      getUserFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(400).json({ message: 'User not found' }),
+      );
+      const response = await request(app).get('/auth/me').expect(400);
+
+      expect(response.body).toEqual({ message: 'User not found' });
     });
   });
 });
