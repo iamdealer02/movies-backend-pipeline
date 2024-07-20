@@ -27,6 +27,12 @@ interface CustomSession {
 type CustomRequest = Request & { session: CustomSession };
 
 describe('Testing auth endpoint', () => {
+  beforeEach(() => {
+    jest.spyOn(logger, 'error').mockReturnValue(null);
+    jest.spyOn(logger, 'info').mockReturnValue(null);
+    jest.spyOn(logger, 'http').mockReturnValue(null);
+  });
+
   describe('Post login Route', () => {
     let sampleUserValue: {
       _id: IUser['_id'];
@@ -40,10 +46,6 @@ describe('Testing auth endpoint', () => {
     let SignStub: jest.SpyInstance;
 
     beforeEach(() => {
-      jest.spyOn(logger, 'error').mockReturnValue(null);
-      jest.spyOn(logger, 'info').mockReturnValue(null);
-      jest.spyOn(logger, 'http').mockReturnValue(null);
-
       sampleUserValue = {
         _id: new mongoose.Types.ObjectId(),
         email: 'test@gmail.com',
@@ -133,6 +135,70 @@ describe('Testing auth endpoint', () => {
       await authController.signIn(req, res);
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: 'Server error' });
+    });
+  });
+  describe('Post signup Route', () => {
+    let req: Request;
+    let res: Response;
+    let CreateStub: jest.SpyInstance;
+    let HashStub: jest.SpyInstance;
+    const sampleUserValues: {
+      username: IUser['username'];
+      email: IUser['email'];
+      password: IUser['password'];
+    } = {
+      email: 'test@gmail.com',
+      password: 'password',
+      username: 'test',
+    };
+    beforeEach(() => {
+      req = getMockReq<Request>({
+        body: { ...sampleUserValues },
+      });
+      res = getMockRes().res;
+      // save method
+      CreateStub = jest.spyOn(User.prototype, 'save').mockResolvedValue({
+        ...sampleUserValues,
+        password: 'hashedPassword',
+      });
+      // hash method
+      HashStub = jest
+        .spyOn(bcrypt, 'hashSync')
+        .mockReturnValue('hashedPassword');
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should create a new user', async () => {
+      await authController.signUp(req, res);
+
+      expect(HashStub).toHaveBeenCalledWith('password', 10);
+      expect(CreateStub).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith({
+        email: 'test@gmail.com',
+        password: 'hashedPassword',
+        username: 'test',
+      });
+    });
+    // missing information
+    it('should return an error if missing information', async () => {
+      req.body = {};
+      await authController.signUp(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'missing information' });
+    });
+    // failed to save user
+    it('should return an error if failed to save user', async () => {
+      CreateStub.mockRejectedValue(new Error('failed to save user'));
+
+      await authController.signUp(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ message: 'failed to save user' });
     });
   });
 });
