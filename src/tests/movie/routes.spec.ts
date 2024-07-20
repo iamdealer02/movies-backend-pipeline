@@ -123,4 +123,45 @@ describe('Testing movies routes', () => {
         });
     });
   });
+
+  describe('GET /movies/me', () => {
+    const getSeenMoviesMock = moviesController.getSeenMovies as jest.Mock;
+
+    it('should return seen movies', (done) => {
+      getSeenMoviesMock.mockImplementation(
+        async (_req: Request, res: Response) =>
+          res.status(200).json({ movies: sampleMovies.rows }),
+      );
+
+      request(app)
+        .get('/movies/me')
+        .set({ Authorization: 'Bearer token' })
+        .expect(200)
+        .end((err, res) => {
+          expect(res.body).toEqual({ movies: sampleMovies.rows });
+          expect(getSeenMoviesMock).toHaveBeenCalledTimes(1);
+          done(err);
+        });
+    });
+
+    it('should return 500 if error occurs (query or req.user)', (done) => {
+      getSeenMoviesMock.mockImplementation(
+        async (_req: Request, res: Response) =>
+          res.status(500).json({
+            error: 'Exception occured while fetching seen movies',
+          }),
+      );
+
+      request(app)
+        .get(`/movies/me`)
+        .expect(500)
+        .end((err, res) => {
+          expect(res.body).toEqual({
+            error: 'Exception occured while fetching seen movies',
+          });
+          expect(getSeenMoviesMock).toHaveBeenCalledTimes(1);
+          done(err);
+        });
+    });
+  });
 });
