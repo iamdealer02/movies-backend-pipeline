@@ -1,10 +1,6 @@
-import chai from 'chai';
-const expect = chai.expect;
 import mongoose from 'mongoose';
 import { User } from '../../models/users.model';
 import { IUser } from '../../interfaces/user.interface';
-
-const ValidationErrors = mongoose.Error.ValidationError;
 
 describe('User Model test', () => {
   const sampleUserValue: {
@@ -20,37 +16,38 @@ describe('User Model test', () => {
     password: 'password',
     createdAt: new Date(),
     updatedAt: new Date(),
-    messages: [],
+    messages: [new mongoose.Types.ObjectId()],
   };
+
   // it should throw a validation error for missing fields
-  it('should throw a validation error for missing fields', (done) => {
-    const user = new User();
+  it('should throw a validation error for missing email', () => {
+    const user = new User({ password: 'password' });
     const err = user.validateSync();
-    if (err) {
-      expect(err).to.be.instanceOf(ValidationErrors);
-      expect(err.errors.email).to.exist;
-      expect(err.errors.password).to.exist;
-      done();
-    } else {
-      const unexpectedError = new Error('Unexpected success');
-      done(unexpectedError);
-    }
+    expect(err).toBeInstanceOf(mongoose.Error.ValidationError);
+    expect(err?.errors).toHaveProperty('email');
+  });
+
+  it('should throw a validation error for missing password', () => {
+    const user = new User({ email: 'test@gmail.com' });
+    const err = user.validateSync();
+    expect(err).toBeInstanceOf(mongoose.Error.ValidationError);
+    expect(err?.errors).toHaveProperty('password');
   });
 
   // it should create users successfully with all required fields
-  it('should create users successfully with all required fields', (done) => {
+  it('should create users successfully with all required fields', () => {
     const user = new User(sampleUserValue);
     const err = user.validateSync();
-    if (err) {
-      const unexpectedError = new Error('Validation failed');
-      done(unexpectedError);
-    } else {
-      expect(user).to.exist;
-      expect(user).to.have.property('email').to.equal(sampleUserValue.email);
-      expect(user)
-        .to.have.property('password')
-        .to.equal(sampleUserValue.password);
-      done();
-    }
+    expect(err).toBeUndefined();
+    expect(user).toHaveProperty('email', sampleUserValue.email);
+    expect(user).toHaveProperty('password', sampleUserValue.password);
+  });
+
+  // messages should be an array of ObjectIds
+  it('messages should be an array of ObjectIds', () => {
+    const user = new User(sampleUserValue);
+    expect(user).toHaveProperty('messages');
+    expect(user.messages).toHaveLength(1);
+    expect(user.messages[0]).toBeInstanceOf(mongoose.Types.ObjectId);
   });
 });
