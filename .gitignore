@@ -2,3 +2,6 @@
 /dist
 /logs
 package-lock.json
+.nyc_output
+.env
+/coverage
