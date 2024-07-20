@@ -60,17 +60,17 @@ export const signUp = async (
   if (!username || !email || !password) {
     return res.status(400).json({ error: 'missing information' });
   }
-  const hash =  bcrypt.hashSync(password, 10);
+  const hash = bcrypt.hashSync(password, 10);
   try {
     const newUser: HydratedDocument<IUser> = new User({
       username,
       email,
       password: hash,
     });
-    const user= await newUser.save();
-    return res.status(201).json( user );
+    const user = await newUser.save();
+    return res.status(201).json(user);
   } catch (err) {
     logger.error(err.stack);
-    return res.status(500).json({ message: "failed to save user" });
+    return res.status(500).json({ message: 'failed to save user' });
   }
 };
