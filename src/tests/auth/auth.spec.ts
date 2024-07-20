@@ -7,6 +7,13 @@ import { User } from '../../models/users.model';
 import { getMockReq, getMockRes } from '@jest-mock/express';
 import * as authController from '../../controllers/auth.controller';
 import logger from '../../middleware/winston';
+jest.mock('../../middleware/winston', () => {
+  return {
+    error: jest.fn(),
+    info: jest.fn(),
+    http: jest.fn(),
+  };
+});
 
 process.env.JWT_SECRET = 'your_test_secret';
 

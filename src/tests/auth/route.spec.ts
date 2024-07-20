@@ -6,7 +6,17 @@ import { App } from 'supertest/types';
 import { jest } from '@jest/globals';
 import logger from '../../middleware/winston';
 
-jest.mock('../../middleware/winston');
+// To avoid connecting to the database during testing and to avoid the open db error (openHandle error)
+jest.mock('../../boot/database/db_connect', () => ({
+  query: jest.fn(),
+}));
+
+// To avoid log statements in the console during tests and to close logger stream (openHandle error)
+jest.mock('../../middleware/winston', () => ({
+  error: jest.fn(),
+  info: jest.fn(),
+  http: jest.fn(),
+}));
 jest.mock('../../controllers/auth.controller');
 
 describe('Testing auth endpoint', () => {
@@ -16,13 +26,13 @@ describe('Testing auth endpoint', () => {
 
   describe('Post login Route', () => {
     let app: App;
-    // mocking the logger
-    jest.spyOn(logger, 'error').mockReturnValue(null);
-    jest.spyOn(logger, 'info').mockReturnValue(null);
-    jest.spyOn(logger, 'http').mockReturnValue(null);
 
-    beforeAll(() => {
+    beforeEach(() => {
       app = registerCoreMiddleWare();
+      // mocking the logger
+      jest.spyOn(logger, 'error').mockReturnValue(null);
+      jest.spyOn(logger, 'info').mockReturnValue(null);
+      jest.spyOn(logger, 'http').mockReturnValue(null);
     });
 
     it('should return a token with 200 status code', async () => {
