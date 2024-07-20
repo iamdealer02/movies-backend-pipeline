@@ -1,266 +1,153 @@
-import chai, { expect } from 'chai';
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
-import rewire from 'rewire';
 import logger from '../../middleware/winston';
 import pool from '../../boot/database/db_connect';
 import {
-  GroupedMoviesInterface,
-  MovieInterface,
-} from '../../interfaces/movie.interface';
-chai.use(sinonChai);
-const sandbox = sinon.createSandbox();
-let moviesController = rewire('../../controllers/movies.controller');
+  sampleMovies,
+  sampleCategoryMovies,
+  sampleMoviesGrouped,
+} from './test.data';
+import * as moviesController from '../../controllers/movies.controller';
+import { getMockReq, getMockRes } from '@jest-mock/express';
+import { Request, Response } from 'express';
 
+// To avoid connecting to the database during testing and to avoid the open db error (openHandle error)
+jest.mock('../../boot/database/db_connect', () => ({
+  query: jest.fn(),
+}));
+
+// To avoid log statements in the console during tests and to close logger stream (openHandle error)
+jest.mock('../../middleware/winston', () => ({
+  error: jest.fn(),
+  info: jest.fn(),
+  http: jest.fn(),
+}));
 describe('Testing movies controller', () => {
-  let sampleMovies: { rows: MovieInterface[] };
-  let sampleCategoryMovies: { rows: MovieInterface[] };
-  let sampleMoviesGrouped: GroupedMoviesInterface;
   const category = 'Action';
 
   beforeEach(() => {
-    sandbox.stub(logger, 'error').returns(null);
-    sandbox.stub(logger, 'info').returns(null);
-    sandbox.stub(logger, 'http').returns(null);
-
-    sampleMovies = {
-      rows: [
-        {
-          movie_id: 1,
-          title: 'sample 1',
-          release_date: '2024-09-22',
-          rating: 5,
-          type: 'Action',
-          author: '',
-          poster: '',
-          backdrop_poster: '',
-          overview: '',
-        },
-        {
-          movie_id: 2,
-          title: 'sample 2',
-          release_date: '2024-09-24',
-          rating: 5,
-          type: 'Action',
-          author: '',
-          poster: '',
-          backdrop_poster: '',
-          overview: '',
-        },
-        {
-          movie_id: 3,
-          title: 'sample 3',
-          release_date: '2024-09-22',
-          rating: 5,
-          type: 'Comedy',
-          author: '',
-          poster: '',
-          backdrop_poster: '',
-          overview: '',
-        },
-        {
-          movie_id: 4,
-          title: 'sample 4',
-          release_date: '2024-09-24',
-          rating: 5,
-          type: 'Comedy',
-          author: '',
-          poster: '',
-          backdrop_poster: '',
-          overview: '',
-        },
-      ],
-    };
-    sampleMoviesGrouped = {
-      Action: [
-        {
-          movie_id: 1,
-          title: 'sample 1',
-          release_date: '2024-09-22',
-          rating: 5,
-          type: 'Action',
-          author: '',
-          poster: '',
-          backdrop_poster: '',
-          overview: '',
-        },
-        {
-          movie_id: 2,
-          title: 'sample 2',
-          release_date: '2024-09-24',
-          rating: 5,
-          type: 'Action',
-          author: '',
-          poster: '',
-          backdrop_poster: '',
-          overview: '',
-        },
-      ],
-      Comedy: [
-        {
-          movie_id: 3,
-          title: 'sample 3',
-          release_date: '2024-09-22',
-          rating: 5,
-          type: 'Comedy',
-          author: '',
-          poster: '',
-          backdrop_poster: '',
-          overview: '',
-        },
-        {
-          movie_id: 4,
-          title: 'sample 4',
-          release_date: '2024-09-24',
-          rating: 5,
-          type: 'Comedy',
-          author: '',
-          poster: '',
-          backdrop_poster: '',
-          overview: '',
-        },
-      ],
-    };
-    sampleCategoryMovies = {
-      rows: [
-        {
-          movie_id: 1,
-          title: 'sample 1',
-          release_date: '2024-09-22',
-          rating: 5,
-          type: 'Action',
-          author: '',
-          poster: '',
-          backdrop_poster: '',
-          overview: '',
-        },
-        {
-          movie_id: 2,
-          title: 'sample 2',
-          release_date: '2024-09-24',
-          rating: 5,
-          type: 'Action',
-          author: '',
-          poster: '',
-          backdrop_poster: '',
-          overview: '',
-        },
-      ],
-    };
+    jest.spyOn(logger, 'error').mockReturnValue(null);
+    jest.spyOn(logger, 'info').mockReturnValue(null);
+    jest.spyOn(logger, 'http').mockReturnValue(null);
   });
 
   afterEach(() => {
-    moviesController = rewire('../../controllers/movies.controller');
-    sandbox.restore();
+    jest.clearAllMocks();
   });
 
   describe('Testing getMovies service', () => {
-    let req: { query: { category?: string } };
-    let res: { status: sinon.SinonStub };
-
-    beforeEach(() => {
-      res = { status: sandbox.stub().returns({ json: sandbox.stub() }) };
-    });
+    let req: Request;
+    const res: Response = getMockRes().res;
 
     // Error tests
     it('should log an error when a query error occurs (without category)', async () => {
-      req = { query: {} };
+      req = getMockReq({ query: {} });
       const error = new Error('error');
-      const poolStub = sandbox.stub(pool, 'query').throws(error);
+      const poolMock = jest
+        .spyOn(pool, 'query')
+        .mockImplementation(async () => {
+          throw error;
+        });
 
       await moviesController.getMovies(req, res);
 
-      expect(poolStub).to.have.been.calledOnce;
-      expect(poolStub).to.have.thrown(error);
-      expect(logger.error).to.have.been.calledWith(error.stack);
-      expect(res.status).to.have.been.calledWith(500);
-      expect(res.status().json).to.have.been.calledWith({
+      expect(poolMock).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith(error.stack);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
         error: 'Exception occured while fetching movies',
       });
     });
 
     it('should log an error when a query error occurs (with category)', async () => {
-      req = { query: { category: category } };
+      req = getMockReq({ query: { category: category } });
       const error = new Error('error');
-      const poolStub = sandbox.stub(pool, 'query').throws(error);
+      const poolMock = jest
+        .spyOn(pool, 'query')
+        .mockImplementation(async () => {
+          throw error;
+        });
 
       await moviesController.getMovies(req, res);
 
-      expect(poolStub).to.have.been.calledOnce;
-      expect(poolStub).to.have.thrown(error);
-      expect(logger.error).to.have.been.calledWith(error.stack);
-      expect(res.status).to.have.been.calledWith(500);
-      expect(res.status().json).to.have.been.calledWith({
+      expect(poolMock).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith(error.stack);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
         error: 'Exception occured while fetching movies',
       });
     });
 
     // Success tests
     it('should call getMoviesByCategory and return movies by category when category is passed', async () => {
-      req = { query: { category: category } };
-
-      const movieControllerMock = sandbox
-        .stub()
-        .resolves(sampleCategoryMovies.rows);
-      moviesController.__set__('getMoviesByCategory', movieControllerMock);
+      req = getMockReq({ query: { category: category } });
+      const poolMock = jest
+        .spyOn(pool, 'query')
+        .mockImplementation(async () => {
+          return sampleCategoryMovies;
+        });
 
       await moviesController.getMovies(req, res);
 
-      expect(movieControllerMock).to.have.been.calledWith(category);
-      expect(res.status).to.have.been.calledWith(200);
-      expect(res.status().json).to.have.been.calledWith({
+      expect(poolMock).toHaveBeenCalledTimes(1);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
         movies: sampleCategoryMovies.rows,
       });
     });
 
     it('should return all movies grouped when no category is passed', async () => {
-      req = { query: {} };
+      req = getMockReq({ query: {} });
 
-      const poolStub = sandbox.stub(pool, 'query').resolves(sampleMovies);
+      const poolMock = jest
+        .spyOn(pool, 'query')
+        .mockImplementation(async () => {
+          return sampleMovies;
+        });
 
       await moviesController.getMovies(req, res);
 
-      expect(poolStub).to.have.been.calledOnce;
-      expect(res.status).to.have.been.calledWith(200);
-      expect(res.status().json).to.have.been.calledWith({
+      expect(poolMock).toHaveBeenCalledTimes(1);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
         movies: sampleMoviesGrouped,
       });
     });
   });
 
   describe('Testing getTopMovies service', () => {
-    let res: { status: sinon.SinonStub };
-
-    beforeEach(() => {
-      res = { status: sandbox.stub().returns({ json: sandbox.stub() }) };
-    });
+    let req: Request;
+    const res: Response = getMockRes().res;
 
     // Error tests
     it('should log an error when a query error occurs', async () => {
-      const req = { query: {} };
+      req = getMockReq();
       const error = new Error('error');
-      const poolStub = sandbox.stub(pool, 'query').throws(error);
+      const poolMock = jest
+        .spyOn(pool, 'query')
+        .mockImplementation(async () => {
+          throw error;
+        });
 
       await moviesController.getTopRatedMovies(req, res);
 
-      expect(poolStub).to.have.been.calledOnce;
-      expect(poolStub).to.have.thrown(error);
-      expect(logger.error).to.have.been.calledWith(error.stack);
-      expect(res.status).to.have.been.calledWith(500);
-      expect(res.status().json).to.have.been.calledWith({
+      expect(poolMock).rejects.toThrow(error);
+      expect(logger.error).toHaveBeenCalledWith(error.stack);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
         error: 'Exception occured while fetching top rated movies',
       });
     });
 
     // Success tests
     it('should return top rated movies', async () => {
-      const poolStub = sandbox.stub(pool, 'query').resolves(sampleMovies);
+      req = getMockReq();
+      jest.spyOn(pool, 'query').mockImplementation(async () => {
+        return sampleMovies;
+      });
 
-      await moviesController.getTopRatedMovies({}, res);
+      await moviesController.getTopRatedMovies(req, res);
 
-      expect(poolStub).to.have.been.calledOnce;
-      expect(res.status).to.have.been.calledWith(200);
-      expect(res.status().json).to.have.been.calledWith({
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
         movies: sampleMovies.rows,
       });
     });
