@@ -5,6 +5,7 @@ import { IUser } from '../interfaces/user.interface';
 import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import logger from '../middleware/winston';
+import { HydratedDocument } from 'mongoose';
 
 export const signIn = async (
   req: Request & { session: { user: { _id: Types.ObjectId } } },
@@ -43,5 +44,33 @@ export const signIn = async (
   } catch (err) {
     logger.error(err.stack);
     return res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const signUp = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
+  const { username, email, password } = req.body as {
+    username: string;
+    email: string;
+    password: string;
+  };
+
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: 'missing information' });
+  }
+  const hash = bcrypt.hashSync(password, 10);
+  try {
+    const newUser: HydratedDocument<IUser> = new User({
+      username,
+      email,
+      password: hash,
+    });
+    const user = await newUser.save();
+    return res.status(201).json(user);
+  } catch (err) {
+    logger.error(err.stack);
+    return res.status(500).json({ message: 'failed to save user' });
   }
 };

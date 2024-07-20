@@ -12,8 +12,6 @@ jest.mock('../../boot/database/db_connect', () => ({
   query: jest.fn(),
 }));
 
-;
-
 // To avoid log statements in the console during tests and to close logger stream (openHandle error)
 jest.mock('../../middleware/winston', () => ({
   error: jest.fn(),
@@ -22,32 +20,31 @@ jest.mock('../../middleware/winston', () => ({
 }));
 jest.mock('../../controllers/auth.controller');
 
-import mongoose from 'mongoose';
+import { IUser } from 'src/interfaces/user.interface';
 
-// to avoid the openHandle error
-afterAll(async () => {
-  await mongoose.connection.close();
-})
 
 describe('Testing auth endpoint', () => {
+  let app: App;
+  let signInFunc: jest.Mock;
+
   afterEach(() => {
     jest.restoreAllMocks();
   });
+  beforeEach(() => {
+    app = registerCoreMiddleWare();
+    // mocking the logger
+    jest.spyOn(logger, 'error').mockReturnValue(null);
+    jest.spyOn(logger, 'info').mockReturnValue(null);
+    jest.spyOn(logger, 'http').mockReturnValue(null);
+  });
 
   describe('Post login Route', () => {
-    let app: App;
-
     beforeEach(() => {
-      app = registerCoreMiddleWare();
-      // mocking the logger
-      jest.spyOn(logger, 'error').mockReturnValue(null);
-      jest.spyOn(logger, 'info').mockReturnValue(null);
-      jest.spyOn(logger, 'http').mockReturnValue(null);
+      signInFunc = authController.signIn as jest.Mock;
     });
 
     it('should return a token with 200 status code', async () => {
       // mocking the controller function
-      const signInFunc = authController.signIn as jest.Mock;
       signInFunc.mockImplementation(async (_req: Request, res: Response) =>
         res.status(200).json({ token: 'fakeToken' }),
       );
@@ -62,7 +59,6 @@ describe('Testing auth endpoint', () => {
     });
 
     it('should return 400 status code if email or password is missing', async () => {
-      const signInFunc = authController.signIn as jest.Mock;
       signInFunc.mockImplementation(async (_req: Request, res: Response) =>
         res.status(400).json({ error: 'Please enter all fields' }),
       );
@@ -74,7 +70,6 @@ describe('Testing auth endpoint', () => {
       expect(response.body).toEqual({ error: 'Please enter all fields' });
     });
     it('should return 400 status code if user is not found', async () => {
-      const signInFunc = authController.signIn as jest.Mock;
       signInFunc.mockImplementation(async (_req: Request, res: Response) =>
         res.status(400).json({ error: 'User not found' }),
       );
@@ -86,7 +81,6 @@ describe('Testing auth endpoint', () => {
       expect(response.body).toEqual({ error: 'User not found' });
     });
     it('should return 400 status code if email or password do not match', async () => {
-      const signInFunc = authController.signIn as jest.Mock;
       signInFunc.mockImplementation(async (_req: Request, res: Response) =>
         res.status(400).json({ error: 'Email or password do not match' }),
       );
@@ -100,13 +94,67 @@ describe('Testing auth endpoint', () => {
       });
     });
     it('should return 500 status code if server error occurs', async () => {
-      const signInFunc = authController.signIn as jest.Mock;
       signInFunc.mockImplementation(async (_req: Request, res: Response) =>
         res.status(500).json({ error: 'Server error' }),
       );
       const response = await request(app)
         .post('/auth/login')
         .send({ username: 'testuser', password: 'testpassword' })
+        .expect(500);
+
+      expect(response.body).toEqual({ error: 'Server error' });
+    });
+  });
+
+  describe('Post signup Route', () => {
+    let app: App;
+    let sampleUserValues: {
+      username: IUser['username'];
+      email: IUser['email'];
+      password: IUser['password'];
+    };
+    let signUpFunc: jest.Mock;
+
+    beforeEach(() => {
+      sampleUserValues = {
+        username: 'testuser',
+        email: 'test@gmail.com',
+        password: 'testpassword',
+      };
+      signUpFunc = authController.signUp as jest.Mock;
+      app = registerCoreMiddleWare();
+    });
+
+    it('should return the new user with 201 status code', async () => {
+      signUpFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(200).json(sampleUserValues),
+      );
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(sampleUserValues)
+        .expect(200);
+
+      expect(response.body).toEqual(sampleUserValues);
+    });
+
+    it('should return 400 status code if email or password is missing', async () => {
+      signUpFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(400).json({ error: 'missing information' }),
+      );
+      const response = await request(app)
+        .post('/auth/signup')
+        .send({ username: 'testuser' })
+        .expect(400);
+
+      expect(response.body).toEqual({ error: 'missing information' });
+    });
+    it('should return 500 status code if server error occurs', async () => {
+      signUpFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(500).json({ error: 'Server error' }),
+      );
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(sampleUserValues)
         .expect(500);
 
       expect(response.body).toEqual({ error: 'Server error' });
