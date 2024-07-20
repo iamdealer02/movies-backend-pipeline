@@ -6,7 +6,6 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
-dotenv.config();
 
 import logger, { streamOptions } from '../middleware/winston';
 
@@ -19,8 +18,10 @@ const PORT: number = parseInt(process.env.PORT) || 3000;
 // mongoose connection
 
 try {
+  dotenv.config();
+  const mongodbURI = process.env.MONGO_URI || 'mongodb://localhost:27017/test-env';
   mongoose.connect(
-    `${process.env.MONGO_URI}/${process.env.MONGO_DB}` as string,
+    mongodbURI
   );
   logger.info('Connected to MongoDB');
 } catch (err) {
