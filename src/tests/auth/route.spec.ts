@@ -6,6 +6,7 @@ import { App } from 'supertest/types';
 import { jest } from '@jest/globals';
 import logger from '../../middleware/winston';
 
+
 // To avoid connecting to the database during testing and to avoid the open db error (openHandle error)
 jest.mock('../../boot/database/db_connect', () => ({
   query: jest.fn(),
@@ -19,13 +20,8 @@ jest.mock('../../middleware/winston', () => ({
 }));
 jest.mock('../../controllers/auth.controller');
 
-import mongoose from 'mongoose';
 import { IUser } from 'src/interfaces/user.interface';
 
-// to avoid the openHandle error
-afterAll(async () => {
-  await mongoose.connection.close();
-});
 
 describe('Testing auth endpoint', () => {
   let app: App;

@@ -6,7 +6,6 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
-
 import logger, { streamOptions } from '../middleware/winston';
 
 // Routes
@@ -17,16 +16,16 @@ const app: Application = express();
 const PORT: number = parseInt(process.env.PORT) || 3000;
 // mongoose connection
 
-try {
-  dotenv.config();
-  const mongodbURI = process.env.MONGO_URI || 'mongodb://localhost:27017/test-env';
-  mongoose.connect(
-    mongodbURI
-  );
-  logger.info('Connected to MongoDB');
-} catch (err) {
-  logger.error(`Error connecting to MongoDB: ${err}`);
-}
+export const connectToMongoDB = (): void => {
+  try {
+    dotenv.config();
+    const mongodbURI = process.env.MONGO_URI as string;
+    mongoose.connect(mongodbURI);
+    logger.info('Connected to MongoDB');
+  } catch (err) {
+    logger.error(`Error connecting to MongoDB: ${err}`);
+  }
+};
 
 const registerCoreMiddleWare = (): Application => {
   try {
