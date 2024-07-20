@@ -7,9 +7,10 @@
     "start": "node ./dist/index.js",
     "lint": "eslint . --fix",
     "build": "tsc",
-    "test": "mocha ./src/tests/**/*.spec.ts --exit",
-    "test:watch": "mocha --watch ./src/tests/*.spec.ts",
-    "test:ci": "nyc --reporter=text npm test",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --coverage",
+    "test:leak":"jest --detectOpenHandles --forceExit",
     "compile:dry": "npx tsc --noEmit",
     "prepare": "husky"
   },
