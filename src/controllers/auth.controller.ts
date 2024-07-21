@@ -74,3 +74,30 @@ export const signUp = async (
     return res.status(500).json({ message: 'failed to save user' });
   }
 };
+
+export const getUser = async (
+  req: Request & { session: { user: { _id: Types.ObjectId } } },
+  res: Response,
+): Promise<Response> => {
+  if (!req.session.user) {
+    return res.status(500).json({ error: 'You are not authenticated' });
+  }
+  try {
+    const user: HydratedDocument<IUser> = await User.findById(
+      req.session.user._id,
+      {
+        password: 0,
+      },
+    );
+    // populate it with messages after we have message model
+    // .populate('messages')
+
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    return res.status(200).json(user);
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to get user' });
+  }
+};
