@@ -101,3 +101,14 @@ export const getUser = async (
     return res.status(500).json({ error: 'Failed to get user' });
   }
 };
+
+export const logout = (
+  req: Request & { session: { user: { _id: Types.ObjectId } } },
+  res: Response,
+): Response => {
+  if (req.session.user) {
+    delete req.session.user;
+  }
+
+  return res.status(200).json({ message: 'Disconnected' });
+};
