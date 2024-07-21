@@ -278,4 +278,29 @@ describe('Testing auth endpoint', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Failed to get user' });
     });
   });
+  describe('Post logout Route', () => {
+    let req: CustomRequest;
+    let res: Response;
+
+    beforeEach(() => {
+      // set user in session
+      req = getMockReq<CustomRequest>({
+        session: {
+          user: {
+            _id: new mongoose.Types.ObjectId(),
+            email: 'test@gmail.com',
+          },
+        },
+      });
+
+      res = getMockRes().res;
+    });
+
+    it('should logout the user', async () => {
+      authController.logout(req, res);
+      expect(req.session.user).toBeUndefined();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Disconnected' });
+    });
+  });
 });

@@ -238,4 +238,22 @@ describe('Testing auth endpoint', () => {
       expect(response.body).toEqual({ message: 'User not found' });
     });
   });
+  describe('Post logout Route', () => {
+    let app: App;
+    let logoutFunc: jest.Mock;
+
+    beforeEach(() => {
+      logoutFunc = authController.logout as jest.Mock;
+      app = registerCoreMiddleWare();
+    });
+
+    it('should return 200 status code if user is authenticated', async () => {
+      logoutFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(200).json({ message: 'Disconnected' }),
+      );
+      const response = await request(app).post('/auth/logout').expect(200);
+
+      expect(response.body).toEqual({ message: 'Disconnected' });
+    });
+  });
 });
