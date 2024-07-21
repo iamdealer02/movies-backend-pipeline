@@ -9,6 +9,7 @@ import logger, { streamOptions } from '../middleware/winston';
 
 // Routes
 import moviesRoutes from '../routes/movies.routes';
+import commentRoutes from '../routes/comment.routes';
 import authRoutes from '../routes/auth.routes';
 
 const app: Application = express();
@@ -48,6 +49,7 @@ const registerCoreMiddleWare = (): Application => {
     // Route registration
     app.use('/movies', moviesRoutes);
     app.use('/auth', authRoutes);
+    app.use('/comments', commentRoutes);
 
     logger.http('Done registering all middlewares');
 
