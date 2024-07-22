@@ -11,12 +11,12 @@ import {
 const getMovies = async (req: Request, res: Response): Promise<Response> => {
   const { category } = req.query as { category?: string };
 
-  if (category) {
-    const result: QueryResultRow[] = await getMoviesByCategory(category);
+  try {
+    if (category) {
+      const result: QueryResultRow[] = await getMoviesByCategory(category);
 
-    return res.status(statusCodes.success).json({ movies: result });
-  } else {
-    try {
+      return res.status(statusCodes.success).json({ movies: result });
+    } else {
       const movies: QueryResult = await pool.query(
         'SELECT * FROM movies GROUP BY type, movie_id;',
       );
@@ -32,29 +32,60 @@ const getMovies = async (req: Request, res: Response): Promise<Response> => {
         },
         {},
       );
-
       return res.status(statusCodes.success).json({ movies: groupedMovies });
-    } catch (error) {
-      logger.error(error.stack);
-      res
-        .status(statusCodes.queryError)
-        .json({ error: 'Exception occured while fetching movies' });
     }
+  } catch (error) {
+    logger.error(error.stack);
+    res
+      .status(statusCodes.queryError)
+      .json({ error: 'Exception occured while fetching movies' });
   }
 };
 
+// Here the try-catch block was removed and the getMovies handles the error in its own try catch. This was to include the query error response on failure of the below function
 const getMoviesByCategory = async (
   category: string,
 ): Promise<QueryResultRow[]> => {
+  const movies: QueryResult = await pool.query(
+    'SELECT * FROM movies WHERE type = $1 ORDER BY release_date DESC;',
+    [category],
+  );
+  return movies.rows;
+};
+
+const getTopRatedMovies = async (
+  _req: Request,
+  res: Response,
+): Promise<Response> => {
   try {
     const movies: QueryResult = await pool.query(
-      'SELECT * FROM movies WHERE type = $1 ORDER BY release_date DESC;',
-      [category],
+      'SELECT * FROM movies ORDER BY rating DESC LIMIT 10;',
     );
-    return movies.rows;
+    return res.status(statusCodes.success).json({ movies: movies.rows });
   } catch (error) {
     logger.error(error.stack);
+    return res
+      .status(statusCodes.queryError)
+      .json({ error: 'Exception occured while fetching top rated movies' });
   }
 };
 
-export { getMovies };
+const getSeenMovies = async (
+  req: Request & { user: { email: string } },
+  res: Response,
+): Promise<Response> => {
+  try {
+    const movies: QueryResult = await pool.query(
+      'SELECT * FROM seen_movies S JOIN movies M ON S.movie_id = M.movie_id WHERE email = $1;',
+      [req.user.email],
+    );
+    return res.status(statusCodes.success).json({ movies: movies.rows });
+  } catch (error) {
+    logger.error(error.stack);
+    return res
+      .status(statusCodes.queryError)
+      .json({ error: 'Exception occured while fetching seen movies' });
+  }
+};
+
+export { getMovies, getTopRatedMovies, getSeenMovies };

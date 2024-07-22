@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import session from 'express-session';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 
 import logger, { streamOptions } from '../middleware/winston';
 
@@ -16,10 +15,9 @@ const app: Application = express();
 const PORT: number = parseInt(process.env.PORT) || 3000;
 // mongoose connection
 
-export const connectToMongoDB = (): void => {
+const connectToMongoDB = (uri?: string): void => {
   try {
-    dotenv.config();
-    const mongodbURI = process.env.MONGO_URI as string;
+    const mongodbURI = uri || (process.env.MONGO_URI as string);
     mongoose.connect(mongodbURI);
     logger.info('Connected to MongoDB');
   } catch (err) {
@@ -89,4 +87,4 @@ const startApp = (): void => {
 };
 
 export default startApp;
-export { registerCoreMiddleWare };
+export { registerCoreMiddleWare, connectToMongoDB };

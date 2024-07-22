@@ -9,7 +9,8 @@
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:ci": "nyc --reporter=text npm test",
+    "test:ci": "jest --coverage",
+    "test:leak": "jest --detectOpenHandles --forceExit",
     "compile:dry": "npx tsc --noEmit",
     "prepare": "husky"
   },
@@ -20,6 +21,7 @@
     "@jest-mock/express": "^2.1.0",
     "@types/jest": "^29.5.12",
     "@types/mongoose": "^5.11.97",
+    "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^7.13.0",
     "@typescript-eslint/parser": "^7.13.0",
     "chai": "^4.4.1",
@@ -59,6 +61,7 @@
     "morgan": "^1.10.0",
     "pg": "^8.12.0",
     "prettier": "^3.3.2",
+    "ts-jest": "^29.2.3",
     "ts-node": "^9.1.1",
     "typescript": "^5.5.3",
     "winston": "^3.13.1"
