@@ -6,7 +6,6 @@ import pg, { QueryResult } from 'pg';
 import { IPgUser } from 'src/interfaces/pgUser.interface';
 import jwt from 'jsonwebtoken';
 
-
 const registerUser = async (req: Request, res: Response): Promise<Response> => {
   const { email, username, password, country, city, street, creation_date } =
     req.body as IPgUser;
@@ -61,48 +60,49 @@ const registerUser = async (req: Request, res: Response): Promise<Response> => {
 };
 
 const login = async (
-    req: Request & { session: { user?: { email: string } } },
-    res: Response
-  ): Promise<Response> => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(statusCodes.badRequest).json({ message: "Missing parameters" });
-    } else {
-      pool.query(
-        "SELECT * FROM users WHERE email = $1 AND password = crypt($2, password);",
-        [email, password],
-        (err, rows) => {
-          if (err) {
-            logger.error(err.stack);
+  req: Request & { session: { user?: { email: string } } },
+  res: Response,
+): Promise<Response> => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res
+      .status(statusCodes.badRequest)
+      .json({ message: 'Missing parameters' });
+  } else {
+    pool.query(
+      'SELECT * FROM users WHERE email = $1 AND password = crypt($2, password);',
+      [email, password],
+      (err, rows) => {
+        if (err) {
+          logger.error(err.stack);
+          return res
+            .status(statusCodes.queryError)
+            .json({ error: 'Exception occurred while logging in' });
+        } else {
+          if (rows.rows[0]) {
+            req.session.user = {
+              email: rows.rows[0].email,
+            };
+
+            const token = jwt.sign(
+              { user: { email: rows.rows[0].email } },
+              process.env.JWT_SECRET,
+              {
+                expiresIn: '1h',
+              },
+            );
             return res
-              .status(statusCodes.queryError)
-              .json({ error: "Exception occurred while logging in" });
+              .status(statusCodes.success)
+              .json({ token, username: rows.rows[0].username });
           } else {
-            if (rows.rows[0]) {
-              req.session.user = {
-                email: rows.rows[0].email,
-              };
-  
-              const token = jwt.sign(
-                { user: { email: rows.rows[0].email } },
-                process.env.JWT_SECRET,
-                {
-                  expiresIn: "1h",
-                }
-              );
-              return res
-                .status(statusCodes.success)
-                .json({ token, username: rows.rows[0].username });
-            } else {
-            
-              return res
-                .status(statusCodes.notFound)
-                .json({ message: "Incorrect email/password" });
-            }
+            return res
+              .status(statusCodes.notFound)
+              .json({ message: 'Incorrect email/password' });
           }
         }
-      );
-    }
-  };
+      },
+    );
+  }
+};
 
 export { registerUser, login };
