@@ -118,4 +118,89 @@ describe('Testing auth controller', () => {
         });
     });
   });
+
+  describe('POST /login', () => {
+    const loginUserMock = userController.login as jest.Mock;
+    const sampleUserLogin: { email: string; password: string } = {
+      email: sampleUser.email,
+      password: sampleUser.password,
+    };
+
+    // query error
+    it('should log an error when a query error occurs', (done) => {
+      loginUserMock.mockImplementation(async (_req: Request, res: Response) =>
+        res
+          .status(500)
+          .json({ message: 'Exception occurred while logging in' }),
+      );
+
+      request(app)
+        .post('/users/login')
+        .send(sampleUserLogin)
+        .expect(500)
+        .end((err, res) => {
+          expect(res.body).toEqual({
+            message: 'Exception occurred while logging in',
+          });
+          expect(loginUserMock).toHaveBeenCalledTimes(1);
+          done(err);
+        });
+    });
+
+    // missing parameters
+    it('should return a 400 error when a parameter is missing', (done) => {
+      loginUserMock.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(400).json({ message: 'Missing parameters' }),
+      );
+
+      request(app)
+        .post('/users/login')
+        .send({})
+        .expect(400)
+        .end((err, res) => {
+          expect(res.body).toEqual({ message: 'Missing parameters' });
+          expect(loginUserMock).toHaveBeenCalledTimes(1);
+          done(err);
+        });
+    });
+
+    // email/password incorrect
+    it('should return a 404 error when email/password is incorrect', (done) => {
+      loginUserMock.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(404).json({ message: 'Incorrect email/password' }),
+      );
+
+      request(app)
+        .post('/users/login')
+        .send(sampleUserLogin)
+        .expect(404)
+        .end((err, res) => {
+          expect(res.body).toEqual({ message: 'Incorrect email/password' });
+          expect(loginUserMock).toHaveBeenCalledTimes(1);
+          done(err);
+        });
+    });
+
+    // token returned
+    it('should return a 200 when a token is returned', (done) => {
+      loginUserMock.mockImplementation(async (_req: Request, res: Response) =>
+        res
+          .status(200)
+          .json({ token: 'fakeToken', username: sampleUser.username }),
+      );
+
+      request(app)
+        .post('/users/login')
+        .send(sampleUserLogin)
+        .expect(200)
+        .end((err, res) => {
+          expect(res.body).toEqual({
+            token: 'fakeToken',
+            username: sampleUser.username,
+          });
+          expect(loginUserMock).toHaveBeenCalledTimes(1);
+          done(err);
+        });
+    });
+  });
 });
