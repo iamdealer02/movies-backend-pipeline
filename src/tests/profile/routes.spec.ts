@@ -1,8 +1,10 @@
 import request from 'supertest';
-import express, { Response, Request } from 'express';
+import express, { Response, Request, NextFunction } from 'express';
 import session from 'express-session';
 import * as profileController from '../../controllers/profile.controller';
 import { mockResponses, requestData, mockUser } from './test.data';
+import verifyToken from '../../middleware/authentication';
+import { CustomRequest } from 'src/interfaces/verifyToken.interface';
 
 jest.mock('../../controllers/profile.controller');
 
@@ -17,15 +19,31 @@ jest.mock('../../middleware/winston', () => ({
   http: jest.fn(),
 }));
 
+jest.mock('../../middleware/authentication', () => jest.fn());
+
 describe('Testing profile routes', () => {
   let app: express.Application;
 
   beforeAll(() => {
     app = express();
     app.use(express.json());
-    app.use(
-      session({ secret: 'testsecret', resave: false, saveUninitialized: true }),
-    );
+    //  verifyToken middleware should return next() and set req.user
+    (verifyToken as jest.Mock).mockImplementation(
+      (req: CustomRequest, _res: Response, next: NextFunction) => {
+        req.user = {
+          email: 'test@gmail.com',
+        };
+        next();
+      },
+    ),
+      app.use(
+        session({
+          secret: 'testsecret',
+          resave: false,
+          saveUninitialized: true,
+        }),
+      );
+
     app.post('/profile/logout', profileController.logout);
     app.put('/profile', profileController.editPassword);
   });
