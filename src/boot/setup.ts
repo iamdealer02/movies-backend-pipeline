@@ -6,10 +6,11 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 
 import logger, { streamOptions } from '../middleware/winston';
+import verifyToken from '../middleware/authentication';
 
 // Routes
-import moviesRoutes from '../routes/movies.routes';
 import authRoutes from '../routes/auth.routes';
+import moviesRoutes from '../routes/movies.routes';
 import messageRoutes from '../routes/messages.routes';
 
 const app: Application = express();
@@ -47,15 +48,17 @@ const registerCoreMiddleWare = (): Application => {
     app.use(helmet()); // enabling helmet -> setting response headers
 
     // Route registration
-    app.use('/movies', moviesRoutes);
+
     app.use('/auth', authRoutes);
     app.use('/messages', messageRoutes);
+    app.use('/movies', moviesRoutes);
+    app.use(verifyToken);
 
     logger.http('Done registering all middlewares');
 
     return app;
   } catch (err) {
-    logger.error('Error thrown while executing registerCoreMiddleWare');
+    logger.error('Error thrown while executing registerCoreMiddleWare', err);
     process.exit(1);
   }
 };
