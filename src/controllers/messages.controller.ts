@@ -28,3 +28,20 @@ export const addMessage = async (
     return res.status(500).json({ error: 'Failed to add message' });
   }
 };
+export const deleteMessage = async (
+  req: Request & { params: { messageId: string } },
+  res: Response,
+): Promise<Response> => {
+  const { messageId } = req.params;
+
+  if (!messageId) {
+    return res.status(400).json({ error: 'missing information' });
+  }
+
+  try {
+    await Message.findByIdAndDelete(messageId);
+    return res.status(204).json({ message: 'message deleted' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to delete message' });
+  }
+}
