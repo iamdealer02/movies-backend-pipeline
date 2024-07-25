@@ -5,6 +5,7 @@ const messageSchema = new Schema<IMessage>(
   {
     name: {
       type: String,
+      required: true
     },
     user: {
       type: Schema.Types.ObjectId,
