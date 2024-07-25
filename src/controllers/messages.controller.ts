@@ -28,3 +28,31 @@ export const addMessage = async (
     return res.status(500).json({ error: 'Failed to add message' });
   }
 };
+
+export const editMessage = async (
+  req: Request & { session: { user: { _id: Types.ObjectId } } },
+  res: Response,
+): Promise<Response> => {
+  const { name } = req.body as { name?: string };
+  const { messageId } = req.params;
+
+  if (!name || !messageId) {
+    return res.status(400).json({ error: 'missing information' });
+  }
+
+  try {
+    const message = await Message.findByIdAndUpdate(
+      messageId,
+      { name },
+      { new: true },
+    ) as IMessage | null;
+    
+    if (!message) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+
+    return res.status(200).json(message);
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to edit message' });
+  }
+}
