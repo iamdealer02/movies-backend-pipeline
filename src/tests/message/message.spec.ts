@@ -107,7 +107,7 @@ describe('testing message controller', () => {
     });
   });
 
-  describe('delete message function', () => { 
+  describe('delete message function', () => {
     let req: CustomRequest;
     let res: Response;
     let findByIdAndDeleteStub: jest.SpyInstance;
@@ -135,10 +135,9 @@ describe('testing message controller', () => {
     });
 
     it('should return 200 and delete the message successfully', async () => {
-
       const mockMessage = { message: 'message deleted' };
       findByIdAndDeleteStub.mockResolvedValue(mockMessage);
-      
+
       await messageController.deleteMessage(req, res);
 
       expect(findByIdAndDeleteStub).toHaveBeenCalled();
@@ -152,7 +151,9 @@ describe('testing message controller', () => {
       await messageController.deleteMessage(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete message' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to delete message',
+      });
     });
-   })
+  });
 });

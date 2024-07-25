@@ -28,6 +28,7 @@ describe('testing messages route', () => {
     user: IMessage['user'];
   };
   let addFunc: jest.Mock;
+  let deleteFunc: jest.Mock;
 
   afterEach(() => {
     jest.restoreAllMocks();
@@ -85,6 +86,51 @@ describe('testing messages route', () => {
       const response = await request(app)
         .post('/messages/add/message')
         .send(sampleMessageValue)
+        .expect(500);
+
+      expect(response.body).toEqual({ error: 'Server Error' });
+    });
+  });
+
+  describe('delete delete message route', () => {
+    beforeEach(() => {
+      deleteFunc = messageController.deleteMessage as jest.Mock;
+    });
+
+    it('should return 200 status code if message is deleted', async () => {
+      const mockMessageId = new mongoose.Types.ObjectId().toHexString();
+
+      deleteFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(200).json({ message: 'message deleted' }),
+      );
+      const response = await request(app)
+        .delete(`/messages/delete/${mockMessageId}`)
+        .expect(200);
+
+      expect(response.body).toEqual({ message: 'message deleted' });
+    });
+
+    it('should return 400 status code if message id is missing', async () => {
+      const mockMessageId = new mongoose.Types.ObjectId().toHexString();
+      
+      deleteFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(400).json({ error: 'Please enter all fields' }),
+      );
+      const response = await request(app)
+        .delete(`/messages/delete/${mockMessageId}`)
+        .expect(400);
+
+      expect(response.body).toEqual({ error: 'Please enter all fields' });
+    });
+
+    it('should return 500 status code if server error', async () => {
+      const mockMessageId = new mongoose.Types.ObjectId().toHexString();
+
+      deleteFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(500).json({ error: 'Server Error' }),
+      );
+      const response = await request(app)
+        .delete(`/messages/delete/${mockMessageId}`)
         .expect(500);
 
       expect(response.body).toEqual({ error: 'Server Error' });
