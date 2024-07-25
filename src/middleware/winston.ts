@@ -1,5 +1,5 @@
 import winston from 'winston';
-import { winstonOptions } from '../interfaces/loggerInterfaces';
+import { winstonOptions } from 'src/interfaces/loggerInterfaces';
 import morgan from 'morgan';
 
 const options: winstonOptions = {

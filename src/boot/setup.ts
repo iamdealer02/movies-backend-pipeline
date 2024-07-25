@@ -3,28 +3,14 @@ import cors from 'cors';
 import helmet from 'helmet';
 import session from 'express-session';
 import morgan from 'morgan';
-import mongoose from 'mongoose';
 
 import logger, { streamOptions } from '../middleware/winston';
 
 // Routes
 import moviesRoutes from '../routes/movies.routes';
-import authRoutes from '../routes/auth.routes';
-import messageRoutes from '../routes/messages.routes';
 
 const app: Application = express();
 const PORT: number = parseInt(process.env.PORT) || 3000;
-// mongoose connection
-
-const connectToMongoDB = (uri?: string): void => {
-  try {
-    const mongodbURI = uri || (process.env.MONGO_URI as string);
-    mongoose.connect(mongodbURI);
-    logger.info('Connected to MongoDB');
-  } catch (err) {
-    logger.error(`Error connecting to MongoDB: ${err}`);
-  }
-};
 
 const registerCoreMiddleWare = (): Application => {
   try {
@@ -48,8 +34,6 @@ const registerCoreMiddleWare = (): Application => {
 
     // Route registration
     app.use('/movies', moviesRoutes);
-    app.use('/auth', authRoutes);
-    app.use('/messages', messageRoutes);
 
     logger.http('Done registering all middlewares');
 
@@ -69,7 +53,7 @@ const handleError = (): void => {
 const startApp = (): void => {
   try {
     registerCoreMiddleWare();
-    connectToMongoDB();
+
     app.listen(PORT, (): void => {
       logger.info('Listening on 127.0.0.1:' + PORT);
     });
@@ -89,4 +73,4 @@ const startApp = (): void => {
 };
 
 export default startApp;
-export { registerCoreMiddleWare, connectToMongoDB };
+export { registerCoreMiddleWare };

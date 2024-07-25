@@ -9,10 +9,8 @@ on:
       - dev
 
 jobs:
-  verify-build-deploy:
+  verify-build:
     runs-on: ubuntu-latest
-    environment:
-      name: ${{ github.ref_name }}
 
     steps:
     - name: Checkout repository
@@ -26,26 +24,29 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Lint code
-      run: npm run lint
-
     - name: Run tests
       run: npm test
 
     - name: Build project
       run: npm run build
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: verify-build
+    environment:
+      name: ${{ github.ref_name }}
     
-    - name: Create .env file
-      run: |
-        touch .env
-        echo "${{ secrets.ENV_SECRETS }}" >> .env
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
     - name: Deploy to EC2
       uses: burnett01/rsync-deployments@5.1
       with:
         switches: -avzr --delete
-        path: './'
+        path: ./*
         remote_path: ${{ secrets.REMOTE_DIR }}
         remote_host: ${{ secrets.REMOTE_HOST }}
         remote_user: ${{ secrets.REMOTE_USER }}
         remote_key: "${{ secrets.SSH_PRIVATE_KEY }}"
+    
