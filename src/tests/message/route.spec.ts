@@ -91,7 +91,7 @@ describe('testing messages route', () => {
     });
   });
 
-  describe('GET get messages route ', () => { 
+  describe('GET get messages route ', () => {
     let getFunc: jest.Mock;
 
     beforeEach(() => {
@@ -109,9 +109,7 @@ describe('testing messages route', () => {
       getFunc.mockImplementation(async (_req: Request, res: Response) =>
         res.status(200).json(mockResponse),
       );
-      const response = await request(app)
-        .get('/messages')
-        .expect(200);
+      const response = await request(app).get('/messages').expect(200);
 
       expect(response.body).toEqual(mockResponse);
     });
@@ -120,11 +118,9 @@ describe('testing messages route', () => {
       getFunc.mockImplementation(async (_req: Request, res: Response) =>
         res.status(500).json({ error: 'Server Error' }),
       );
-      const response = await request(app)
-        .get('/messages')
-        .expect(500);
+      const response = await request(app).get('/messages').expect(500);
 
       expect(response.body).toEqual({ error: 'Server Error' });
     });
-   })
+  });
 });
