@@ -106,4 +106,59 @@ describe('testing message controller', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Failed to add message' });
     });
   });
+
+  describe('get messages function', () => {
+    let req: Request;
+    let res: Response;
+    let findStub: jest.SpyInstance;
+
+    beforeEach(() => {
+      req = getMockReq();
+      res = getMockRes().res;
+      findStub = jest.spyOn(Message, 'find');
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should return 200 and fetch messages successfully', async () => {
+      const mockMessages = [
+        {
+          _id: new mongoose.Types.ObjectId(),
+          name: 'mock name',
+          user: new mongoose.Types.ObjectId(),
+        },
+      ];
+  
+      const populateMock = {
+        populate: jest.fn().mockResolvedValue(mockMessages),
+      };
+  
+      findStub.mockReturnValue(populateMock);
+  
+      await messageController.getMessages(req, res);
+  
+      expect(findStub).toHaveBeenCalled();
+      expect(populateMock.populate).toHaveBeenCalledWith('user');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockMessages);
+    });
+
+    it('should return 500 if there is an error', async () => {
+      const errorMessage = 'Failed to fetch messages';
+      const populateMock = {
+        populate: jest.fn().mockRejectedValue(new Error(errorMessage)),
+      };
+  
+      findStub.mockReturnValue(populateMock);
+  
+      await messageController.getMessages(req, res);
+  
+      expect(findStub).toHaveBeenCalled();
+      expect(populateMock.populate).toHaveBeenCalledWith('user');
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch messages' });
+    });
+  });
 });

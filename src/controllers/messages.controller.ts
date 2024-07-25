@@ -37,7 +37,6 @@ export const getMessages = async (
     const messages = await Message.find().populate('user');
     return res.status(200).json(messages);
   } catch (error) {
-    // console.log('Error while fetching messages from DB', error.message);
     return res.status(500).json({ error: 'Failed to fetch messages' });
   }
 };
