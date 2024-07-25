@@ -112,7 +112,7 @@ describe('testing messages route', () => {
 
     it('should return 400 status code if message id is missing', async () => {
       const mockMessageId = new mongoose.Types.ObjectId().toHexString();
-      
+
       deleteFunc.mockImplementation(async (_req: Request, res: Response) =>
         res.status(400).json({ error: 'Please enter all fields' }),
       );
