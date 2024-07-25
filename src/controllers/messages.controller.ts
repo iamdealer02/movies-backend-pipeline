@@ -24,7 +24,7 @@ export const addMessage = async (
     await messageObj.save();
     return res.status(200).json(messageObj);
   } catch (error) {
-    console.log('Error while adding message to DB', error.message);
+    // console.log('Error while adding message to DB', error.message);
     return res.status(500).json({ error: 'Failed to add message' });
   }
 };
