@@ -1,6 +1,6 @@
-import Message from 'src/models/messages.model';
+import Message from '../models/messages.model';
 import { Types } from 'mongoose';
-import { IMessage } from 'src/interfaces/message.interface';
+import { IMessage } from '../interfaces/message.interface';
 import { Request, Response } from 'express';
 
 export const addMessage = async (
