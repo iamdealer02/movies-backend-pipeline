@@ -41,12 +41,12 @@ export const editMessage = async (
   }
 
   try {
-    const message = await Message.findByIdAndUpdate(
+    const message = (await Message.findByIdAndUpdate(
       messageId,
       { name },
       { new: true },
-    ) as IMessage | null;
-    
+    )) as IMessage | null;
+
     if (!message) {
       return res.status(404).json({ error: 'Message not found' });
     }
@@ -55,4 +55,4 @@ export const editMessage = async (
   } catch (error) {
     return res.status(500).json({ error: 'Failed to edit message' });
   }
-}
+};

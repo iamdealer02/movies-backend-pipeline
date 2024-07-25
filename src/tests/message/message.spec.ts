@@ -106,4 +106,79 @@ describe('testing message controller', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Failed to add message' });
     });
   });
+
+  describe('PUT edit message function', () => { 
+    const sampleMessageValue: {
+      name: IMessage['name'];
+      user: IMessage['user'];
+    } = {
+      name: 'mock name',
+      user: new mongoose.Types.ObjectId(),
+    };
+    let req: CustomRequest;
+    let res: Response;
+    let findByIdAndUpdateStub: jest.SpyInstance;
+
+    beforeEach(() => {
+      req = getMockReq<CustomRequest>({
+        body: {
+          name: sampleMessageValue.name,
+        },
+        params: {
+          messageId: new mongoose.Types.ObjectId().toHexString(),
+        },
+      });
+      res = getMockRes().res;
+      findByIdAndUpdateStub = jest.spyOn(Message, 'findByIdAndUpdate');
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should return 400 if name or messageId is missing', async () => {
+      req.body = {};
+      await messageController.editMessage(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'missing information' });
+    });
+
+    it('should return 404 if message is not found', async () => {
+      findByIdAndUpdateStub.mockResolvedValue(null);
+
+      await messageController.editMessage(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Message not found' });
+    });
+
+    it('should return 200 and update the message successfully', async () => {
+      const mockMessage = new Message({
+        ...sampleMessageValue,
+        _id: req.params.messageId,
+      });
+
+      findByIdAndUpdateStub.mockResolvedValue(mockMessage);
+
+      await messageController.editMessage(req, res);
+
+      expect(findByIdAndUpdateStub).toHaveBeenCalledWith(
+        req.params.messageId,
+        { name: req.body.name },
+        { new: true },
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockMessage);
+    });
+
+    it('should return 500 if there is an error while updating the message', async () => {
+      findByIdAndUpdateStub.mockRejectedValue(new Error('Update failed'));
+
+      await messageController.editMessage(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to edit message' });
+    });
+   })
 });
