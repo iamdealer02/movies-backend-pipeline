@@ -130,15 +130,15 @@ describe('testing message controller', () => {
           user: new mongoose.Types.ObjectId(),
         },
       ];
-  
+
       const populateMock = {
         populate: jest.fn().mockResolvedValue(mockMessages),
       };
-  
+
       findStub.mockReturnValue(populateMock);
-  
+
       await messageController.getMessages(req, res);
-  
+
       expect(findStub).toHaveBeenCalled();
       expect(populateMock.populate).toHaveBeenCalledWith('user');
       expect(res.status).toHaveBeenCalledWith(200);
@@ -150,15 +150,17 @@ describe('testing message controller', () => {
       const populateMock = {
         populate: jest.fn().mockRejectedValue(new Error(errorMessage)),
       };
-  
+
       findStub.mockReturnValue(populateMock);
-  
+
       await messageController.getMessages(req, res);
-  
+
       expect(findStub).toHaveBeenCalled();
       expect(populateMock.populate).toHaveBeenCalledWith('user');
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch messages' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to fetch messages',
+      });
     });
   });
 });

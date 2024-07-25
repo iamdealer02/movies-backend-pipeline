@@ -40,7 +40,7 @@ describe('testing messages route', () => {
     jest.spyOn(logger, 'http').mockReturnValue(null);
   });
 
-  describe('post add message route', () => {
+  describe('POST add message route', () => {
     beforeEach(() => {
       sampleMessageValue = {
         name: 'mock name',
@@ -90,4 +90,41 @@ describe('testing messages route', () => {
       expect(response.body).toEqual({ error: 'Server Error' });
     });
   });
+
+  describe('GET get messages route ', () => { 
+    let getFunc: jest.Mock;
+
+    beforeEach(() => {
+      getFunc = messageController.getMessages as jest.Mock;
+    });
+
+    it('should return all messages with 200 status code', async () => {
+      const mockResponse = [
+        {
+          name: 'mock name',
+          user: new mongoose.Types.ObjectId().toHexString(),
+        },
+      ];
+
+      getFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(200).json(mockResponse),
+      );
+      const response = await request(app)
+        .get('/messages')
+        .expect(200);
+
+      expect(response.body).toEqual(mockResponse);
+    });
+
+    it('should return 500 status code if server error', async () => {
+      getFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(500).json({ error: 'Server Error' }),
+      );
+      const response = await request(app)
+        .get('/messages')
+        .expect(500);
+
+      expect(response.body).toEqual({ error: 'Server Error' });
+    });
+   })
 });
