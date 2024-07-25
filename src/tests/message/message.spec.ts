@@ -107,7 +107,7 @@ describe('testing message controller', () => {
     });
   });
 
-  describe('PUT edit message function', () => { 
+  describe('edit message function', () => {
     const sampleMessageValue: {
       name: IMessage['name'];
       user: IMessage['user'];
@@ -178,7 +178,9 @@ describe('testing message controller', () => {
       await messageController.editMessage(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to edit message' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to edit message',
+      });
     });
-   })
+  });
 });
