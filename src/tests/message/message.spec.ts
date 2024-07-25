@@ -106,4 +106,53 @@ describe('testing message controller', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Failed to add message' });
     });
   });
+
+  describe('delete message function', () => { 
+    let req: CustomRequest;
+    let res: Response;
+    let findByIdAndDeleteStub: jest.SpyInstance;
+
+    beforeEach(() => {
+      req = getMockReq<CustomRequest>({
+        params: {
+          messageId: new mongoose.Types.ObjectId().toHexString(),
+        },
+      });
+      res = getMockRes().res;
+      findByIdAndDeleteStub = jest.spyOn(Message, 'findByIdAndDelete');
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should return 400 if messageId is missing', async () => {
+      req.params = {};
+      await messageController.deleteMessage(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'missing information' });
+    });
+
+    it('should return 200 and delete the message successfully', async () => {
+
+      const mockMessage = { message: 'message deleted' };
+      findByIdAndDeleteStub.mockResolvedValue(mockMessage);
+      
+      await messageController.deleteMessage(req, res);
+
+      expect(findByIdAndDeleteStub).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockMessage);
+    });
+
+    it('should return 500 if there is an error while deleting the message', async () => {
+      findByIdAndDeleteStub.mockRejectedValue(new Error('Delete failed'));
+
+      await messageController.deleteMessage(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete message' });
+    });
+   })
 });
