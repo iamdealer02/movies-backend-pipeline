@@ -57,6 +57,7 @@
     "husky": "^9.0.11",
     "jest-mock": "^29.7.0",
     "jsonwebtoken": "^9.0.2",
+    "mongodb-memory-server": "^10.0.0",
     "mongoose": "^6.2.6",
     "morgan": "^1.10.0",
     "pg": "^8.12.0",
