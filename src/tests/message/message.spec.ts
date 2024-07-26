@@ -107,7 +107,7 @@ describe('testing message controller', () => {
     });
   });
 
-  describe('get message by id function', () => { 
+  describe('get message by id function', () => {
     let req: Request;
     let res: Response;
     let findByIdStub: jest.SpyInstance;
@@ -164,7 +164,9 @@ describe('testing message controller', () => {
       await messageController.getMessageById(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch message' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to fetch message',
+      });
     });
-   })
+  });
 });
