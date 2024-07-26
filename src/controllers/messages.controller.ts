@@ -50,4 +50,4 @@ export const getMessageById = async (
   } catch (error) {
     return res.status(500).json({ error: 'Failed to fetch message' });
   }
-}
+};
