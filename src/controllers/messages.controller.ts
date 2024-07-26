@@ -28,3 +28,15 @@ export const addMessage = async (
     return res.status(500).json({ error: 'Failed to add message' });
   }
 };
+
+export const getMessages = async (
+  _req: Request,
+  res: Response,
+): Promise<Response> => {
+  try {
+    const messages = await Message.find().populate('user');
+    return res.status(200).json(messages);
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+};
