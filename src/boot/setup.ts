@@ -50,8 +50,9 @@ const registerCoreMiddleWare = (): Application => {
     // Route registration
 
     app.use('/auth', authRoutes);
-    app.use('/comments', commentRoutes);
+    
     app.use(verifyToken);
+    app.use('/comments', commentRoutes);
     app.use('/movies', moviesRoutes);
 
     logger.http('Done registering all middlewares');
