@@ -1,11 +1,13 @@
 import request from 'supertest';
 
 import { App } from 'supertest/types';
-import { Response, Request } from 'express';
+import { Response, Request, NextFunction } from 'express';
 
 import * as commentController from '../../controllers/comment.controller';
 import { registerCoreMiddleWare } from '../../boot/setup';
 import { sampleComments } from './test.data';
+import verifyToken from '../../middleware/authentication';
+import { CustomRequest } from '../../interfaces/verifyToken.interface';
 
 jest.mock('../../controllers/comment.controller');
 jest.mock('../../boot/database/db_connect', () => ({
@@ -19,10 +21,23 @@ jest.mock('../../middleware/winston', () => ({
   http: jest.fn(),
 }));
 
+// mock verifyToken middleware
+jest.mock('../../middleware/authentication', () => jest.fn());
+
 describe('Testing comment routes', () => {
   let app: App;
+  
   beforeAll(() => {
     app = registerCoreMiddleWare();
+    //  verifyToken middleware should return next() and set req.user
+    (verifyToken as jest.Mock).mockImplementation(
+      (req: CustomRequest, _res: Response, next: NextFunction) => {
+        req.user = {
+          email: 'test@gmail.com',
+        };
+        next();
+      },
+    );
   });
 
   afterEach(() => {
