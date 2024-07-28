@@ -23,6 +23,8 @@ jobs:
       run: npm run lint
 
     - name: Run tests
+      env:
+        TEST_DB_URI: ${{ secrets.TEST_DB_URI }}
       run: npm test
 
     - name: Build project
