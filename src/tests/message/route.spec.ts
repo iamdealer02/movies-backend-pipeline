@@ -1,8 +1,10 @@
 import * as messageController from '../../controllers/messages.controller';
 import { IMessage } from '../../interfaces/message.interface';
-import { Response, Request } from 'express';
+import { Response, Request, NextFunction } from 'express';
 import request from 'supertest';
 import { registerCoreMiddleWare } from '../../boot/setup';
+import verifyToken from '../../middleware/authentication';
+import { CustomRequest } from '../../interfaces/verifyToken.interface';
 import { App } from 'supertest/types';
 import { jest } from '@jest/globals';
 import logger from '../../middleware/winston';
@@ -19,7 +21,9 @@ jest.mock('../../middleware/winston', () => ({
   info: jest.fn(),
   http: jest.fn(),
 }));
+
 jest.mock('../../controllers/messages.controller');
+jest.mock('../../middleware/authentication', () => jest.fn());
 
 describe('testing messages route', () => {
   let app: App;
@@ -28,12 +32,26 @@ describe('testing messages route', () => {
     user: IMessage['user'];
   };
   let addFunc: jest.Mock;
+  let getFunc: jest.Mock;
+
+  beforeAll(() => {
+    app = registerCoreMiddleWare();
+    //  verifyToken middleware should return next() and set req.user
+    (verifyToken as jest.Mock).mockImplementation(
+      (req: CustomRequest, _res: Response, next: NextFunction) => {
+        req.user = {
+          email: 'test@gmail.com',
+        };
+        next();
+      },
+    );
+  });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
+
   beforeEach(() => {
-    app = registerCoreMiddleWare();
     // mocking the logger
     jest.spyOn(logger, 'error').mockReturnValue(null);
     jest.spyOn(logger, 'info').mockReturnValue(null);
@@ -92,8 +110,6 @@ describe('testing messages route', () => {
   });
 
   describe('GET get messages route ', () => {
-    let getFunc: jest.Mock;
-
     beforeEach(() => {
       getFunc = messageController.getMessages as jest.Mock;
     });
