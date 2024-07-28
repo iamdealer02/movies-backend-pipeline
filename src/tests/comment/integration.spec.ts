@@ -6,12 +6,20 @@ import { sampleComment } from './test.data';
 import { registerCoreMiddleWare } from '../../boot/setup';
 import { App } from 'supertest/types';
 import * as stausCodes from '../../constants/statusCodes';
+import pool from '../../boot/database/db_connect';
 
 let mongodb: MongoMemoryServer;
 let app: App;
 
 // setting JWT_SECRET for testing
 process.env.JWT_SECRET = 'TEST_SECRET';
+
+// To avoid log statements in the console during tests and to close logger stream (openHandle error)
+jest.mock('../../middleware/winston', () => ({
+  error: jest.fn(),
+  info: jest.fn(),
+  http: jest.fn(),
+}));
 
 beforeAll(async () => {
   try {
@@ -25,6 +33,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await pool.end();
   await mongoose.connection.dropDatabase();
   await mongoose.connection.close();
   await mongodb.stop();
