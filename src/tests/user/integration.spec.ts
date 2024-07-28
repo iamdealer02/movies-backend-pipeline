@@ -4,6 +4,7 @@ import { App } from 'supertest/types';
 import pool from '../../boot/database/db_connect';
 
 let app: App;
+process.env.JWT_SECRET = 'testsecret';
 
 beforeAll(async () => {
   app = registerCoreMiddleWare();
