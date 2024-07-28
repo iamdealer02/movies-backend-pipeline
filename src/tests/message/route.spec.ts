@@ -32,6 +32,7 @@ describe('testing messages route', () => {
     user: IMessage['user'];
   };
   let addFunc: jest.Mock;
+  let getByIdFunc: jest.Mock;
   let deleteFunc: jest.Mock;
   let editFunc: jest.Mock;
   let getFunc: jest.Mock;
@@ -244,6 +245,56 @@ describe('testing messages route', () => {
       );
       const response = await request(app)
         .delete(`/messages/delete/${mockMessageId}`)
+        .expect(500);
+
+      expect(response.body).toEqual({ error: 'Server Error' });
+    });
+  });
+  
+  describe('get get message by id route', () => {
+    beforeEach(() => {
+      getByIdFunc = messageController.getMessageById as jest.Mock;
+    });
+
+    it('should return the message with 200 status code', async () => {
+      const mockMessageId = new mongoose.Types.ObjectId().toHexString();
+
+      const mockResponse = {
+        ...sampleMessageValue,
+        user: sampleMessageValue.user.toHexString(),
+      };
+
+      getByIdFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(200).json(mockResponse),
+      );
+      const response = await request(app)
+        .get(`/messages/${mockMessageId}`)
+        .expect(200);
+
+      expect(response.body).toEqual(mockResponse);
+    });
+
+    it('should return 404 status code if message is not found', async () => {
+      const mockMessageId = new mongoose.Types.ObjectId().toHexString();
+
+      getByIdFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(404).json({ error: 'Message not found' }),
+      );
+      const response = await request(app)
+        .get(`/messages/${mockMessageId}`)
+        .expect(404);
+
+      expect(response.body).toEqual({ error: 'Message not found' });
+    });
+
+    it('should return 500 status code if server error', async () => {
+      const mockMessageId = new mongoose.Types.ObjectId().toHexString();
+
+      getByIdFunc.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(500).json({ error: 'Server Error' }),
+      );
+      const response = await request(app)
+        .get(`/messages/${mockMessageId}`)
         .expect(500);
 
       expect(response.body).toEqual({ error: 'Server Error' });

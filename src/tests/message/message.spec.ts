@@ -367,4 +367,67 @@ describe('testing message controller', () => {
       });
     });
   });
+  
+  describe('get message by id function', () => {
+    let req: Request;
+    let res: Response;
+    let findByIdStub: jest.SpyInstance;
+
+    beforeEach(() => {
+      req = getMockReq<Request>({
+        params: {
+          messageId: new mongoose.Types.ObjectId().toHexString(),
+        },
+      });
+      res = getMockRes().res;
+      findByIdStub = jest.spyOn(Message, 'findById');
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should return 400 if message id is missing', async () => {
+      req.params = {};
+      await messageController.getMessageById(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'missing information' });
+    });
+
+    it('should return 404 if message is not found', async () => {
+      findByIdStub.mockResolvedValue(null);
+
+      await messageController.getMessageById(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Message not found' });
+    });
+
+    it('should return 200 and the message if found', async () => {
+      const mockMessage = {
+        _id: req.params.messageId,
+        name: 'mock name',
+        user: new mongoose.Types.ObjectId(),
+      };
+
+      findByIdStub.mockResolvedValue(mockMessage);
+
+      await messageController.getMessageById(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockMessage);
+    });
+
+    it('should return 500 if there is an error while fetching the message', async () => {
+      findByIdStub.mockRejectedValue(new Error('Find failed'));
+
+      await messageController.getMessageById(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Failed to fetch message',
+      });
+    });
+  });
 });
