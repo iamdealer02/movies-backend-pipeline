@@ -6,7 +6,6 @@ import { mockResponses } from './test.data';
 
 jest.mock('../../controllers/profile.controller');
 
-
 jest.mock('../../boot/database/db_connect', () => ({
   query: jest.fn(),
 }));
@@ -17,24 +16,22 @@ jest.mock('../../middleware/winston', () => ({
   http: jest.fn(),
 }));
 
-
-
 describe('Testing profile routes', () => {
-    let app: express.Application;
-  
-    beforeAll(() => {
-      app = express();
-      app.use(express.json());
-      app.use(
-        session({ secret: 'testsecret', resave: false, saveUninitialized: true }),
-      );
-      app.post('/profile/logout', profileController.logout);
-    });
-  
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
-  
+  let app: express.Application;
+
+  beforeAll(() => {
+    app = express();
+    app.use(express.json());
+    app.use(
+      session({ secret: 'testsecret', resave: false, saveUninitialized: true }),
+    );
+    app.post('/profile/logout', profileController.logout);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('POST /profile/logout', () => {
     const logoutMock = profileController.logout as jest.Mock;
 
