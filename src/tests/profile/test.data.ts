@@ -25,6 +25,7 @@ export const mockResponses = {
   incorrectPassword: { message: 'Incorrect password' },
   queryError: { error: 'Exception occurred while updating password' },
   passwordUpdated: { message: 'Password updated' },
+  disconnected: { message: 'Disconnected' },
 };
 
 export const mockUser: UserProfile = {

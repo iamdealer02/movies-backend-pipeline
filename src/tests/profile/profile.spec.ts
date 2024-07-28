@@ -3,8 +3,9 @@ import pool from '../../boot/database/db_connect';
 import { requestData, mockResponses, mockUser } from './test.data';
 import { getMockReq, getMockRes } from '@jest-mock/express';
 import * as profileController from '../../controllers/profile.controller';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { UserProfile } from 'src/interfaces/profile.interface';
+import session from 'express-session';
 
 interface QueryResult {
   rows: Array<{ [key: string]: unknown }>;
@@ -12,6 +13,10 @@ interface QueryResult {
 
 interface CustomRequest extends Request {
   user: UserProfile;
+}
+
+interface CustomSession extends session.Session {
+  user?: UserProfile;
 }
 
 // To avoid connecting to the database during testing and to avoid the open db error (openHandle error)
@@ -73,17 +78,18 @@ describe('Testing profile controller', () => {
       });
 
       // Correct implementation of pool.query mock
-      const poolMock = jest.spyOn(pool, 'query').mockImplementation(
-        (
-          _query: string, 
-          _values: unknown[], 
-          callback: (error: Error | null, result: QueryResult) => void,
-        ) => {
-
-          // Simulate that the old password is incorrect by returning an empty rows array
-          callback(null, { rows: [] });
-        },
-      );
+      const poolMock = jest
+        .spyOn(pool, 'query')
+        .mockImplementation(
+          (
+            _query: string,
+            _values: unknown[],
+            callback: (error: Error | null, result: QueryResult) => void,
+          ) => {
+            // Simulate that the old password is incorrect by returning an empty rows array
+            callback(null, { rows: [] });
+          },
+        );
 
       await profileController.editPassword(req, res);
 
@@ -99,16 +105,18 @@ describe('Testing profile controller', () => {
       });
 
       const error = new Error('Query error');
-      const poolMock = jest.spyOn(pool, 'query').mockImplementation(
-        (
-          _query: string, 
-          _values: unknown[], 
-          callback: (error: Error | null, result: QueryResult) => void,
-        ) => {
-          // Simulate a query error
-          callback(error, { rows: [] });
-        },
-      );
+      const poolMock = jest
+        .spyOn(pool, 'query')
+        .mockImplementation(
+          (
+            _query: string,
+            _values: unknown[],
+            callback: (error: Error | null, result: QueryResult) => void,
+          ) => {
+            // Simulate a query error
+            callback(error, { rows: [] });
+          },
+        );
 
       await profileController.editPassword(req, res);
 
@@ -129,7 +137,7 @@ describe('Testing profile controller', () => {
         .spyOn(pool, 'query')
         .mockImplementationOnce(
           (
-            _query: string, 
+            _query: string,
             _values: unknown[],
             callback: (error: Error | null, result: QueryResult) => void,
           ) => {
@@ -140,7 +148,7 @@ describe('Testing profile controller', () => {
         .mockImplementationOnce(
           (
             _query: string,
-            _values: unknown[], 
+            _values: unknown[],
             callback: (error: Error | null, result: QueryResult) => void,
           ) => {
             // Simulate a successful password update
@@ -153,6 +161,38 @@ describe('Testing profile controller', () => {
       expect(poolMock).toHaveBeenCalledTimes(2);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponses.passwordUpdated);
+    });
+  });
+
+  describe('Testing logout service', () => {
+    let req: Request;
+    let res: Response;
+
+    beforeEach(() => {
+      req = getMockReq({
+        session: {
+          user: mockUser,
+        } as CustomSession,
+      });
+      res = getMockRes().res;
+    });
+
+    it('should delete the user from the session and return 200 status', async () => {
+      await profileController.logout(req, res);
+
+      expect((req.session as CustomSession).user).toBeUndefined();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockResponses.disconnected);
+    });
+
+    it('should return 200 status even if no user in session', async () => {
+      req.session = {} as CustomSession; // no user in session
+
+      await profileController.logout(req, res);
+
+      expect((req.session as CustomSession).user).toBeUndefined();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockResponses.disconnected);
     });
   });
 });
