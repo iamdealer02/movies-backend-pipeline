@@ -68,3 +68,21 @@ export const getMessages = async (
     return res.status(500).json({ error: 'Failed to fetch messages' });
   }
 };
+
+export const deleteMessage = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
+  const { messageId } = req.params;
+
+  if (!messageId) {
+    return res.status(400).json({ error: 'missing information' });
+  }
+
+  try {
+    await Message.findByIdAndDelete(messageId);
+    return res.status(200).json({ message: 'message deleted' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to delete message' });
+  }
+};
