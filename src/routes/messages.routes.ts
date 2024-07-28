@@ -5,5 +5,6 @@ const router = express.Router();
 
 router.post('/add/message', messageController.addMessage);
 router.put('/edit/:messageId', messageController.editMessage);
+router.get('/', messageController.getMessages);
 
 export default router;
