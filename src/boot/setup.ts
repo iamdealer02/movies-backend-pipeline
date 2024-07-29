@@ -8,10 +8,13 @@ import mongoose from 'mongoose';
 import logger, { streamOptions } from '../middleware/winston';
 import verifyToken from '../middleware/authentication';
 
+import healthCheck from '../middleware/healthCheck';
+
 // Routes
 import moviesRoutes from '../routes/movies.routes';
 import commentRoutes from '../routes/comment.routes';
 import authRoutes from '../routes/auth.routes';
+import usersRoutes from '../routes/users.routes';
 
 const app: Application = express();
 const PORT: number = parseInt(process.env.PORT) || 3000;
@@ -47,13 +50,16 @@ const registerCoreMiddleWare = (): Application => {
     app.use(cors({})); // enabling CORS
     app.use(helmet()); // enabling helmet -> setting response headers
 
+    // Health check route
+    app.use(healthCheck)
+
     // Route registration
 
     app.use('/auth', authRoutes);
-    
+    app.use('/users', usersRoutes);
     app.use(verifyToken);
-    app.use('/comments', commentRoutes);
     app.use('/movies', moviesRoutes);
+    app.use('/comments', commentRoutes);
 
     logger.http('Done registering all middlewares');
 
