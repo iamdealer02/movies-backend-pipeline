@@ -1,5 +1,5 @@
 import logger from './winston';
-import { badRequest } from 'src/constants/statusCodes';
+import { badRequest } from '../constants/statusCodes';
 import { Response, NextFunction } from 'express';
 import { CustomRequest } from 'src/interfaces/validator.interface';
 
@@ -18,7 +18,7 @@ export const validator = (
   try {
     for (const [key, value] of Object.entries(req.body)) {
       if (value === '') {
-        req.body[key] = value;
+        req.body[key] = null;
         continue;
       }
     }
