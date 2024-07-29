@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 
 import logger, { streamOptions } from '../middleware/winston';
+import { validator } from '../middleware/validator';
 
 // Routes
 import moviesRoutes from '../routes/movies.routes';
@@ -44,6 +45,9 @@ const registerCoreMiddleWare = (): Application => {
     app.use(express.json()); // returning middleware that only parses Json
     app.use(cors({})); // enabling CORS
     app.use(helmet()); // enabling helmet -> setting response headers
+
+    // middleware
+    app.use(validator);
 
     // Route registration
     app.use('/movies', moviesRoutes);
