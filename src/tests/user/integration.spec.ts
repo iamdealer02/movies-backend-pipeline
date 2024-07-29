@@ -2,38 +2,27 @@ import request from 'supertest';
 import { registerCoreMiddleWare } from '../../boot/setup';
 import { App } from 'supertest/types';
 import pool from '../../boot/database/db_connect';
+import { pg_teardown } from '../helper';
+import { pg_setup } from '../helper';
 
 let app: App;
 process.env.JWT_SECRET = 'testsecret';
 
-beforeAll(async () => {
-  app = registerCoreMiddleWare();
-  // Create tables if they do not exist
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      email VARCHAR(100) PRIMARY KEY,
-      username VARCHAR(100) NOT NULL,
-      password VARCHAR(100) NOT NULL,
-      creation_date DATE NOT NULL
-    );
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS addresses (
-      email VARCHAR(100) PRIMARY KEY REFERENCES users(email),
-      country VARCHAR(100) NOT NULL,
-      city VARCHAR(100) NOT NULL,
-      street VARCHAR(100) NOT NULL
-    );
-  `);
-});
-
-// close logger stream (openHandle error)
 jest.mock('../../middleware/winston', () => ({
   error: jest.fn(),
   info: jest.fn(),
   http: jest.fn(),
 }));
+
+beforeAll(async () => {
+  app = registerCoreMiddleWare();
+  await pg_setup();
+});
+
+afterAll(async () => {
+  await pg_teardown();
+  await pool.end();
+});
 
 describe('User Registration and Login Integration Tests', () => {
   const testUser = {
@@ -47,12 +36,13 @@ describe('User Registration and Login Integration Tests', () => {
   };
 
   beforeEach(async () => {
+    await pool.query('BEGIN');
     await pool.query('DELETE FROM addresses;');
     await pool.query('DELETE FROM users;');
   });
+
   afterEach(async () => {
-    await pool.query('DELETE FROM addresses;');
-    await pool.query('DELETE FROM users;');
+    await pool.query('ROLLBACK');
   });
 
   describe('User Registration', () => {
@@ -139,9 +129,4 @@ describe('User Registration and Login Integration Tests', () => {
       expect(response.body.message).toBe('Missing parameters');
     });
   });
-});
-
-// at the end of the test, close the pool
-afterAll(async () => {
-  await pool.end();
 });
