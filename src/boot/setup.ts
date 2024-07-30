@@ -6,11 +6,14 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 
 import logger, { streamOptions } from '../middleware/winston';
+import verifyToken from '../middleware/authentication';
+import healthCheck from '../middleware/healthCheck';
 import { validator } from '../middleware/validator';
 
 // Routes
 import moviesRoutes from '../routes/movies.routes';
 import authRoutes from '../routes/auth.routes';
+import usersRoutes from '../routes/users.routes';
 
 const app: Application = express();
 const PORT: number = parseInt(process.env.PORT) || 3000;
@@ -46,18 +49,21 @@ const registerCoreMiddleWare = (): Application => {
     app.use(cors({})); // enabling CORS
     app.use(helmet()); // enabling helmet -> setting response headers
 
-    // middleware
     app.use(validator);
-
+    // Health check route
+    app.use(healthCheck);
     // Route registration
-    app.use('/movies', moviesRoutes);
+
     app.use('/auth', authRoutes);
+    app.use('/users', usersRoutes);
+    app.use(verifyToken);
+    app.use('/movies', moviesRoutes);
 
     logger.http('Done registering all middlewares');
 
     return app;
   } catch (err) {
-    logger.error('Error thrown while executing registerCoreMiddleWare');
+    logger.error('Error thrown while executing registerCoreMiddleWare', err);
     process.exit(1);
   }
 };

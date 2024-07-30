@@ -1,7 +1,7 @@
 import logger from './winston';
 import { badRequest } from '../constants/statusCodes';
 import { Response, NextFunction } from 'express';
-import { CustomRequest } from 'src/interfaces/validator.interface';
+import { CustomRequest } from '../interfaces/validator.interface';
 
 export const validator = (
   req: CustomRequest,
