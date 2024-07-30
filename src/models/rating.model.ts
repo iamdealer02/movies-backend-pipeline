@@ -1,7 +1,6 @@
 import { Schema, model } from 'mongoose';
 import { IRating } from 'src/interfaces/rating.interface';
 
-
 const ratingSchema = new Schema<IRating>(
   {
     movie_id: {
@@ -23,8 +22,8 @@ const ratingSchema = new Schema<IRating>(
     timestamps: {
       createdAt: 'created_at',
     },
-  }
+  },
 );
 
 const Rating = model<IRating>('Rating', ratingSchema);
-export {Rating};
+export { Rating };

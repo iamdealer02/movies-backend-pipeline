@@ -1,20 +1,19 @@
 import mongoose from 'mongoose';
 import { Rating } from '../../models/rating.model';
-import { IRating } from '../../interfaces/rating.interface'; 
+import { IRating } from '../../interfaces/rating.interface';
 
 describe('Rating Model Test', () => {
   const sampleRatingValue: {
     movie_id: IRating['movie_id'];
     email: IRating['email'];
     rating: IRating['rating'];
-    created_at: IRating['created_at']; 
+    created_at: IRating['created_at'];
   } = {
     movie_id: 1,
     email: 'test@example.com',
     rating: 4,
     created_at: new Date(),
   };
-
 
   it('should throw a validation error for missing movie_id', () => {
     const rating = new Rating({
@@ -36,6 +35,15 @@ describe('Rating Model Test', () => {
     expect(err?.errors).toHaveProperty('email');
   });
 
+  it('should throw a validation error for missing rating', () => {
+    const rating = new Rating({
+      movie_id: 1,
+      email: 'test@example.com',
+    });
+    const err = rating.validateSync();
+    expect(err).toBeInstanceOf(mongoose.Error.ValidationError);
+    expect(err?.errors).toHaveProperty('rating');
+  });
 
   it('should throw a validation error for rating out of range', () => {
     const rating = new Rating({
@@ -48,7 +56,6 @@ describe('Rating Model Test', () => {
     expect(err?.errors).toHaveProperty('rating');
   });
 
-
   it('should create ratings successfully with all required fields', () => {
     const rating = new Rating(sampleRatingValue);
     const err = rating.validateSync();
@@ -57,7 +64,6 @@ describe('Rating Model Test', () => {
     expect(rating).toHaveProperty('email', sampleRatingValue.email);
     expect(rating).toHaveProperty('rating', sampleRatingValue.rating);
   });
-
 
   it('created_at should be a Date instance', () => {
     const rating = new Rating(sampleRatingValue);

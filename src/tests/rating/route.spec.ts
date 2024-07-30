@@ -30,7 +30,8 @@ describe('Testing rating routes', () => {
     (verifyToken as jest.Mock).mockImplementation(
       (req: CustomRequest, _res: Response, next: NextFunction) => {
         req.user = {
-           email: 'test@test.com' }; 
+          email: 'test@test.com',
+        };
         next();
       },
     );
@@ -40,30 +41,29 @@ describe('Testing rating routes', () => {
     jest.clearAllMocks();
   });
 
-  describe('POST /movies/:movieId/rating', () => {
+  describe('POST /rating/:movieId', () => {
     const addRatingMock = ratingController.addRating as jest.Mock;
 
     it('should return 200 with success message on valid request', async () => {
-      addRatingMock.mockImplementation(async (_req: Request, res: Response) => 
-        res.status(200).json({ message: 'Rating added' })
+      addRatingMock.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(200).json({ message: 'Rating added' }),
       );
 
       const response = await request(app)
-        .post('/rating/movies/111/rating')
+        .post('/rating/111')
         .send({ rating: 5 })
         .expect(200);
 
       expect(response.body).toEqual({ message: 'Rating added' });
-  
     });
 
     it('should return 400 if rating is missing', async () => {
-      addRatingMock.mockImplementation(async (_req: Request, res: Response) => 
-        res.status(400).json({ message: 'Missing parameters' })
+      addRatingMock.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(400).json({ message: 'Missing parameters' }),
       );
 
       const response = await request(app)
-        .post('/rating/movies/111/rating')
+        .post('/rating/111')
         .send({}) // no rating
         .expect(400);
 
@@ -72,12 +72,12 @@ describe('Testing rating routes', () => {
     });
 
     it('should return 400 if movieId is invalid', async () => {
-      addRatingMock.mockImplementation(async (_req: Request, res: Response) => 
-        res.status(400).json({ message: 'Missing parameters' })
+      addRatingMock.mockImplementation(async (_req: Request, res: Response) =>
+        res.status(400).json({ message: 'Missing parameters' }),
       );
 
       const response = await request(app)
-        .post('/rating/movies/invalid/rating') // Invalid movieId
+        .post('/rating/invalid') // Invalid movieId
         .send({ rating: 5 })
         .expect(400);
 
@@ -86,12 +86,14 @@ describe('Testing rating routes', () => {
     });
 
     it('should return 500 if server error occurs', async () => {
-      addRatingMock.mockImplementation(async (_req: Request, res: Response) => 
-        res.status(500).json({ error: 'Exception occurred while adding rating' })
+      addRatingMock.mockImplementation(async (_req: Request, res: Response) =>
+        res
+          .status(500)
+          .json({ error: 'Exception occurred while adding rating' }),
       );
 
       const response = await request(app)
-        .post('/rating/movies/123/rating')
+        .post('/rating/123')
         .send({ rating: 5 })
         .expect(500);
 

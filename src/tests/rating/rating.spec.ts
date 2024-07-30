@@ -6,10 +6,17 @@ import * as statusCodes from '../../constants/statusCodes';
 import logger from '../../middleware/winston';
 import { getMockReq, getMockRes } from '@jest-mock/express';
 import { addRating } from '../../controllers/rating.controller';
-import { mockUser, mockRequestData, mockResponses, mockRatings } from './test.data';
+import {
+  mockUser,
+  mockRequestData,
+  mockResponses,
+  mockRatings,
+} from './test.data';
 
 jest.mock('../../models/rating.model');
-jest.mock('../../boot/database/db_connect');
+jest.mock('../../boot/database/db_connect', () => ({
+  query: jest.fn(),
+}));
 jest.mock('../../middleware/winston', () => ({
   error: jest.fn(),
   info: jest.fn(),
@@ -33,8 +40,8 @@ describe('Testing addRating endpoint', () => {
 
   afterAll(async () => {
     // Ensure proper cleanup
+    jest.clearAllMocks();
     await mongoose.disconnect();
-    await pool.end();
   });
 
   describe('POST rating route', () => {
@@ -81,14 +88,16 @@ describe('Testing addRating endpoint', () => {
 
       await addRating(req, res);
 
-      const averageRating = mockRatings.reduce<number>((acc, rating) => acc + rating.rating, 0) / mockRatings.length;
+      const averageRating =
+        mockRatings.reduce<number>((acc, rating) => acc + rating.rating, 0) /
+        mockRatings.length;
 
       expect(mockSave).toHaveBeenCalledTimes(1);
       expect(mockFind).toHaveBeenCalledTimes(1);
-      expect(mockQuery).toHaveBeenCalledWith('UPDATE movies SET rating = $1 WHERE movie_id = $2;', [
-        averageRating,
-        1,
-      ]);
+      expect(mockQuery).toHaveBeenCalledWith(
+        'UPDATE movies SET rating = $1 WHERE movie_id = $2;',
+        [averageRating, 1],
+      );
       expect(res.status).toHaveBeenCalledWith(statusCodes.success);
       expect(res.json).toHaveBeenCalledWith(mockResponses.ratingAdded);
     });
