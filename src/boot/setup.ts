@@ -13,6 +13,7 @@ import healthCheck from '../middleware/healthCheck';
 import moviesRoutes from '../routes/movies.routes';
 import authRoutes from '../routes/auth.routes';
 import usersRoutes from '../routes/users.routes';
+import ratingRoutes from '../routes/rating.routes';
 
 const app: Application = express();
 const PORT: number = parseInt(process.env.PORT) || 3000;
@@ -57,6 +58,7 @@ const registerCoreMiddleWare = (): Application => {
     app.use('/users', usersRoutes);
     app.use(verifyToken);
     app.use('/movies', moviesRoutes);
+    app.use('/rating', ratingRoutes);
 
     logger.http('Done registering all middlewares');
 
