@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 import logger, { streamOptions } from '../middleware/winston';
 import verifyToken from '../middleware/authentication';
 import healthCheck from '../middleware/healthCheck';
+import { validator } from '../middleware/validator';
 
 // Routes
 import moviesRoutes from '../routes/movies.routes';
@@ -48,9 +49,9 @@ const registerCoreMiddleWare = (): Application => {
     app.use(cors({})); // enabling CORS
     app.use(helmet()); // enabling helmet -> setting response headers
 
+    app.use(validator);
     // Health check route
-    app.use(healthCheck)
-
+    app.use(healthCheck);
     // Route registration
 
     app.use('/auth', authRoutes);
