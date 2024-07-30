@@ -20,9 +20,21 @@ const addRating = async (req: RequestWithUser, res: Response): Promise<void> => 
 
   const movie_id = parseInt(movieId);
 
-  if (isNaN(movie_id) || !rating) {
+
+  if (isNaN(movie_id)) {
+    res.status(statusCodes.badRequest).json({ message: 'Invalid movie_id' });
+    return;
+  }
+
+  if (rating == null) {
     res.status(statusCodes.badRequest).json({ message: 'Missing parameters' });
-  } else {
+    return;
+  }
+
+  if (isNaN(rating) || rating < 0 || rating > 5) {
+    res.status(statusCodes.badRequest).json({ message: 'Invalid rating' });
+    return;
+  }
     try {
       const ratingObj = new Rating({
         email: req.user.email,
@@ -47,7 +59,7 @@ const addRating = async (req: RequestWithUser, res: Response): Promise<void> => 
       logger.error(error.stack);
       res.status(statusCodes.queryError).json({ error: 'Exception occurred while adding rating' });
     }
-  }
-};
+  };
+
 
 export { addRating };

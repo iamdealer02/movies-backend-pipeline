@@ -5,6 +5,8 @@ const success: number = 200;
 const unauthorized: number = 401;
 const badRequest: number = 400;
 const userAlreadyExists: number = 409;
+const created: number = 201;
+
 
 export {
   queryError,
@@ -14,4 +16,5 @@ export {
   unauthorized,
   badRequest,
   userAlreadyExists,
+  created
 };

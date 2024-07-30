@@ -59,7 +59,17 @@ describe('Testing addRating endpoint', () => {
       await addRating(req, res);
 
       expect(res.status).toHaveBeenCalledWith(statusCodes.badRequest);
-      expect(res.json).toHaveBeenCalledWith(mockResponses.missingParameters);
+      expect(res.json).toHaveBeenCalledWith(mockResponses.invalidMovieId);
+    });
+
+
+    it('should check and return 400 if rating is not a number', async () => {
+      req.body = mockRequestData.invalidRating;
+
+      await addRating(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(statusCodes.badRequest);
+      expect(res.json).toHaveBeenCalledWith(mockResponses.invalidRating);
     });
 
     it('should return 400 if rating is missing', async () => {
