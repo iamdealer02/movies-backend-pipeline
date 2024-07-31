@@ -7,12 +7,14 @@ import mongoose from 'mongoose';
 
 import logger, { streamOptions } from '../middleware/winston';
 import verifyToken from '../middleware/authentication';
+
 import healthCheck from '../middleware/healthCheck';
 import { validator } from '../middleware/validator';
 import notFoundMiddleware from '../middleware/notFound';
 
 // Routes
 import moviesRoutes from '../routes/movies.routes';
+import commentRoutes from '../routes/comment.routes';
 import authRoutes from '../routes/auth.routes';
 import usersRoutes from '../routes/users.routes';
 
@@ -59,6 +61,7 @@ const registerCoreMiddleWare = (): Application => {
     app.use('/users', usersRoutes);
     app.use(verifyToken);
     app.use('/movies', moviesRoutes);
+    app.use('/comments', commentRoutes);
 
     app.use(notFoundMiddleware);
 
