@@ -55,11 +55,10 @@ const registerCoreMiddleWare = (): Application => {
     // Health check route
     app.use(healthCheck);
     // Route registration
-    app.use(verifyToken);
-    app.use('/profile', profileRoutes);
     app.use('/auth', authRoutes);
     app.use('/users', usersRoutes);
     app.use(verifyToken);
+    app.use('/profile', profileRoutes);
     app.use('/movies', moviesRoutes);
     app.use('/comments', commentRoutes);
 
