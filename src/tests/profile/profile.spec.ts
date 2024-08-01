@@ -77,7 +77,6 @@ describe('Testing profile controller', () => {
         user: mockUser,
       });
 
-      // Correct implementation of pool.query mock
       const poolMock = jest
         .spyOn(pool, 'query')
         .mockImplementation(
@@ -98,7 +97,7 @@ describe('Testing profile controller', () => {
       expect(res.json).toHaveBeenCalledWith(mockResponses.incorrectPassword);
     });
 
-    it('should return 500 if there is a query error', async () => {
+    it('should return 500 if there is a query error during password check', async () => {
       req = getMockReq({
         body: requestData.validPasswordChange,
         user: mockUser,
@@ -113,18 +112,57 @@ describe('Testing profile controller', () => {
             _values: unknown[],
             callback: (error: Error | null, result: QueryResult) => void,
           ) => {
-            // Simulate a query error
+            // Simulate a query error during password check
+            callback(error, { rows: [] });
+          },
+        );
+
+      await profileController.editPassword(req, res);
+      expect(poolMock).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith(error.stack);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith(mockResponses.queryError);
+    });
+
+    it('should return 500 if there is a query error during password update', async () => {
+      req = getMockReq({
+        body: requestData.validPasswordChange,
+        user: mockUser,
+      });
+
+      const error = new Error('Query error');
+      const poolMock = jest
+        .spyOn(pool, 'query')
+        .mockImplementationOnce(
+          (
+            _query: string,
+            _values: unknown[],
+            callback: (error: Error | null, result: QueryResult) => void,
+          ) => {
+            // Simulate a successful old password check
+            callback(null, { rows: [{ email: mockUser.email }] });
+          },
+        )
+        .mockImplementationOnce(
+          (
+            _query: string,
+            _values: unknown[],
+            callback: (error: Error | null, result: QueryResult) => void,
+          ) => {
+            // Simulate a query error during password update
             callback(error, { rows: [] });
           },
         );
 
       await profileController.editPassword(req, res);
 
-      expect(poolMock).toHaveBeenCalledTimes(1);
+      expect(poolMock).toHaveBeenCalledTimes(2);
       expect(logger.error).toHaveBeenCalledWith(error.stack);
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith(mockResponses.queryError);
     });
+
+
 
     // Success tests
     it('should return 200 if the password is updated successfully', async () => {
