@@ -142,7 +142,7 @@ describe('testing messages route', () => {
       expect(response.body).toEqual({ error: 'Server Error' });
     });
   });
-  
+
   describe('put edit message route', () => {
     beforeEach(() => {
       sampleMessageValue = {
@@ -205,7 +205,7 @@ describe('testing messages route', () => {
       expect(response.body).toEqual({ error: 'Server Error' });
     });
   });
-  
+
   describe('delete delete message route', () => {
     beforeEach(() => {
       deleteFunc = messageController.deleteMessage as jest.Mock;
@@ -250,7 +250,7 @@ describe('testing messages route', () => {
       expect(response.body).toEqual({ error: 'Server Error' });
     });
   });
-  
+
   describe('get get message by id route', () => {
     beforeEach(() => {
       getByIdFunc = messageController.getMessageById as jest.Mock;

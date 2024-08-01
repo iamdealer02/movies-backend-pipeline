@@ -8,3 +8,13 @@ export const testData: IMessage = {
   createdAt: new Date(),
   updatedAt: new Date(),
 };
+
+export const user = {
+  email: 'test@gmail.com',
+  username: 'testuser',
+  password: 'testpassword',
+} as {
+  email: string;
+  username: string;
+  password: string;
+};

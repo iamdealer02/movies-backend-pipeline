@@ -183,7 +183,7 @@ describe('testing message controller', () => {
       });
     });
   });
-  
+
   describe('add message function', () => {
     const sampleMessageValue: {
       name: IMessage['name'];
@@ -317,7 +317,7 @@ describe('testing message controller', () => {
       });
     });
   });
-  
+
   describe('delete message function', () => {
     let req: CustomRequest;
     let res: Response;
@@ -367,7 +367,7 @@ describe('testing message controller', () => {
       });
     });
   });
-  
+
   describe('get message by id function', () => {
     let req: Request;
     let res: Response;
