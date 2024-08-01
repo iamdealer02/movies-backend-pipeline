@@ -3,6 +3,7 @@ import pool from '../boot/database/db_connect';
 
 export const pg_setup = async (): Promise<void> => {
   await pool.query(`
+    CREATE EXTENSION IF NOT EXISTS pgcrypto;
         CREATE TABLE IF NOT EXISTS users (
       email VARCHAR(100) PRIMARY KEY,
       username VARCHAR(100) NOT NULL,
