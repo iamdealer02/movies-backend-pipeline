@@ -9,10 +9,8 @@ on:
       - dev
 
 jobs:
-  build-and-test:
-    runs-on: [self-hosted, "${{ github.ref_name }}"]
-    environment:
-      name: ${{ github.ref_name }}
+  checks:
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
@@ -26,19 +24,46 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Create .env file
-      run: |
-        touch .env
-        echo "${{ secrets.ENV_SECRETS }}" >> .env
-
     - name: Lint code
       run: npm run lint
 
     - name: Run tests
+      env:
+        TEST_DB_URI: ${{ secrets.TEST_DB_URI }}
       run: npm test
 
     - name: Build project
       run: npm run build
+
+  deploy:
+    runs-on: [self-hosted, "${{ github.ref_name }}"]
+    needs: checks
+    environment:
+      name: ${{ github.ref_name }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build project
+      run: npm run build
+
+    - name: Create .env file
+      run: |
+        touch .env
+        echo "${{ secrets.ENV_SECRETS }}" >> .env
+    
+    - name: Deploy and Reload project
+      run: |
+        pm2 reload movies-app 
 
 
       
