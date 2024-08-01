@@ -3,7 +3,7 @@ import * as profileController from '../controllers/profile.controller';
 
 const router = express.Router();
 
-router.put('/', profileController.editPassword);
-router.post('/', profileController.logout);
+router.put('/editPassword', profileController.editPassword);
+router.post('/logout', profileController.logout);
 
 export default router;
