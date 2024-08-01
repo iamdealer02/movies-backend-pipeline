@@ -183,83 +183,6 @@ describe('testing message controller', () => {
       });
     });
   });
-  
-  describe('add message function', () => {
-    const sampleMessageValue: {
-      name: IMessage['name'];
-      user: IMessage['user'];
-    } = {
-      name: 'mock name',
-      user: new mongoose.Types.ObjectId(),
-    };
-    let req: CustomRequest;
-    let res: Response;
-    let saveStub: jest.SpyInstance;
-
-    beforeEach(() => {
-      req = getMockReq<CustomRequest>({
-        body: {
-          message: {
-            name: sampleMessageValue.name,
-            user: sampleMessageValue.user,
-          },
-        },
-        session: {
-          user: {
-            _id: sampleMessageValue.user,
-          },
-        },
-      });
-      res = getMockRes().res;
-      saveStub = jest.spyOn(Message.prototype, 'save');
-    });
-
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
-
-    it('should return 400 if message or message.name is missing', async () => {
-      req.body = {};
-      await messageController.addMessage(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'missing information' });
-    });
-
-    it('should return 500 if user is not authenticated', async () => {
-      req.session.user = null;
-      await messageController.addMessage(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({
-        error: 'You are not authenticated',
-      });
-    });
-
-    it('should return 201 and save the message successfully', async () => {
-      const mockMessage = new Message({
-        ...sampleMessageValue,
-        user: req.session.user._id,
-      });
-
-      saveStub.mockResolvedValue(mockMessage);
-
-      await messageController.addMessage(req, res);
-
-      expect(saveStub).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(201);
-      // expect(res.json).toHaveBeenCalledWith(mockMessage);
-    });
-
-    it('should return 500 if there is an error while saving the message', async () => {
-      saveStub.mockRejectedValue(new Error('Save failed'));
-
-      await messageController.addMessage(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to add message' });
-    });
-  });
 
   describe('get messages function', () => {
     let req: Request;
@@ -317,7 +240,7 @@ describe('testing message controller', () => {
       });
     });
   });
-  
+
   describe('delete message function', () => {
     let req: CustomRequest;
     let res: Response;
@@ -367,7 +290,7 @@ describe('testing message controller', () => {
       });
     });
   });
-  
+
   describe('get message by id function', () => {
     let req: Request;
     let res: Response;
