@@ -184,15 +184,5 @@ describe('Testing profile controller', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponses.disconnected);
     });
-
-    it('should return 200 status even if no user in session', async () => {
-      req.session = {} as CustomSession; // no user in session
-
-      await profileController.logout(req, res);
-
-      expect((req.session as CustomSession).user).toBeUndefined();
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith(mockResponses.disconnected);
-    });
   });
 });

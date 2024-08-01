@@ -45,7 +45,7 @@ describe('Testing profile routes', () => {
       );
 
     app.post('/profile/logout', profileController.logout);
-    app.put('/profile', profileController.editPassword);
+    app.put('/profile/editPassword', profileController.editPassword);
   });
 
   afterEach(() => {
@@ -62,7 +62,7 @@ describe('Testing profile routes', () => {
       );
 
       request(app)
-        .put('/profile')
+        .put('/profile/editPassword')
         .set('Authorization', `Bearer ${mockUser.email}`)
         .send(requestData.missingParameters)
         .expect(400)
@@ -80,7 +80,7 @@ describe('Testing profile routes', () => {
       );
 
       request(app)
-        .put('/profile')
+        .put('/profile/editPassword')
         .set('Authorization', `Bearer ${mockUser.email}`)
         .send(requestData.samePasswords)
         .expect(400)
@@ -98,7 +98,7 @@ describe('Testing profile routes', () => {
       );
 
       request(app)
-        .put('/profile')
+        .put('/profile/editPassword')
         .set('Authorization', `Bearer ${mockUser.email}`)
         .send(requestData.incorrectPassword)
         .expect(400)
@@ -116,7 +116,7 @@ describe('Testing profile routes', () => {
       );
 
       request(app)
-        .put('/profile')
+        .put('/profile/editPassword')
         .set('Authorization', `Bearer ${mockUser.email}`)
         .send(requestData.validPasswordChange)
         .expect(500)
@@ -134,7 +134,7 @@ describe('Testing profile routes', () => {
       );
 
       request(app)
-        .put('/profile')
+        .put('/profile/editPassword')
         .set('Authorization', `Bearer ${mockUser.email}`)
         .send(requestData.validPasswordChange)
         .expect(200)
@@ -150,23 +150,6 @@ describe('Testing profile routes', () => {
     const logoutMock = profileController.logout as jest.Mock;
 
     it('should delete the user from the session and return 200 status', (done) => {
-      logoutMock.mockImplementation(async (_req: Request, res: Response) => {
-        return res.status(200).json(mockResponses.disconnected);
-      });
-
-      request(app)
-        .post('/profile/logout')
-        .send()
-        .expect(200)
-        .end((err, res) => {
-          if (err) return done(err);
-          expect(res.body).toEqual(mockResponses.disconnected);
-          expect(logoutMock).toHaveBeenCalledTimes(1);
-          done();
-        });
-    });
-
-    it('should return 200 status even if no user in session', (done) => {
       logoutMock.mockImplementation(async (_req: Request, res: Response) => {
         return res.status(200).json(mockResponses.disconnected);
       });
