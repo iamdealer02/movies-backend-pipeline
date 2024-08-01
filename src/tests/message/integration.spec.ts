@@ -7,12 +7,12 @@ import { jest } from '@jest/globals';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { connectToMongoDB } from '../../boot/setup';
 import mongoose from 'mongoose';
-import { user } from './test.data';
+import { user, SuperTestAgent } from './test.data';
 import * as stausCodes from '../../constants/statusCodes';
 
 let app: App;
 let mongodb: MongoMemoryServer;
-let agent: any;
+let agent: SuperTestAgent;
 process.env.JWT_SECRET = 'testsecret';
 
 beforeAll(async () => {
@@ -20,7 +20,7 @@ beforeAll(async () => {
     app = registerCoreMiddleWare();
     mongodb = await MongoMemoryServer.create();
     const uri = mongodb.getUri();
-    agent = request.agent(app);
+    agent = request.agent(app) as unknown as SuperTestAgent;
     connectToMongoDB(uri);
   } catch (error) {
     throw error;
