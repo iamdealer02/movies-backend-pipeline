@@ -5,6 +5,7 @@ import { IMessage } from '../../interfaces/message.interface';
 import { getMockReq, getMockRes } from '@jest-mock/express';
 import * as messageController from '../../controllers/messages.controller';
 import logger from '../../middleware/winston';
+import * as statusCodes from '../../constants/statusCodes';
 
 jest.mock('../../middleware/winston', () => {
   return {
@@ -68,7 +69,7 @@ describe('testing message controller', () => {
       req.body = {};
       await messageController.addMessage(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.badRequest);
       expect(res.json).toHaveBeenCalledWith({ error: 'missing information' });
     });
 
@@ -76,7 +77,7 @@ describe('testing message controller', () => {
       req.session.user = null;
       await messageController.addMessage(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.queryError);
       expect(res.json).toHaveBeenCalledWith({
         error: 'You are not authenticated',
       });
@@ -93,7 +94,7 @@ describe('testing message controller', () => {
       await messageController.addMessage(req, res);
 
       expect(saveStub).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.created);
       // expect(res.json).toHaveBeenCalledWith(mockMessage);
     });
 
@@ -102,7 +103,7 @@ describe('testing message controller', () => {
 
       await messageController.addMessage(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.queryError);
       expect(res.json).toHaveBeenCalledWith({ error: 'Failed to add message' });
     });
   });
@@ -140,7 +141,7 @@ describe('testing message controller', () => {
       req.body = {};
       await messageController.editMessage(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.badRequest);
       expect(res.json).toHaveBeenCalledWith({ error: 'missing information' });
     });
 
@@ -149,7 +150,7 @@ describe('testing message controller', () => {
 
       await messageController.editMessage(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.notFound);
       expect(res.json).toHaveBeenCalledWith({ error: 'Message not found' });
     });
 
@@ -168,7 +169,7 @@ describe('testing message controller', () => {
         { name: req.body.name },
         { new: true },
       );
-      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.success);
       expect(res.json).toHaveBeenCalledWith(mockMessage);
     });
 
@@ -218,7 +219,7 @@ describe('testing message controller', () => {
 
       expect(findStub).toHaveBeenCalled();
       expect(populateMock.populate).toHaveBeenCalledWith('user');
-      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.success);
       expect(res.json).toHaveBeenCalledWith(mockMessages);
     });
 
@@ -234,7 +235,7 @@ describe('testing message controller', () => {
 
       expect(findStub).toHaveBeenCalled();
       expect(populateMock.populate).toHaveBeenCalledWith('user');
-      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.queryError);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to fetch messages',
       });
@@ -264,7 +265,7 @@ describe('testing message controller', () => {
       req.params = {};
       await messageController.deleteMessage(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.badRequest);
       expect(res.json).toHaveBeenCalledWith({ error: 'missing information' });
     });
 
@@ -275,7 +276,7 @@ describe('testing message controller', () => {
       await messageController.deleteMessage(req, res);
 
       expect(findByIdAndDeleteStub).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.success);
       expect(res.json).toHaveBeenCalledWith(mockMessage);
     });
 
@@ -284,7 +285,7 @@ describe('testing message controller', () => {
 
       await messageController.deleteMessage(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.queryError);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to delete message',
       });
@@ -314,7 +315,7 @@ describe('testing message controller', () => {
       req.params = {};
       await messageController.getMessageById(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.badRequest);
       expect(res.json).toHaveBeenCalledWith({ error: 'missing information' });
     });
 
@@ -323,7 +324,7 @@ describe('testing message controller', () => {
 
       await messageController.getMessageById(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.notFound);
       expect(res.json).toHaveBeenCalledWith({ error: 'Message not found' });
     });
 
@@ -338,7 +339,7 @@ describe('testing message controller', () => {
 
       await messageController.getMessageById(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.success);
       expect(res.json).toHaveBeenCalledWith(mockMessage);
     });
 
@@ -347,7 +348,7 @@ describe('testing message controller', () => {
 
       await messageController.getMessageById(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.status).toHaveBeenCalledWith(statusCodes.queryError);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to fetch message',
       });

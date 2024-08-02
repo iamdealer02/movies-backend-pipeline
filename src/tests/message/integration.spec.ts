@@ -8,7 +8,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { connectToMongoDB } from '../../boot/setup';
 import mongoose from 'mongoose';
 import { user, SuperTestAgent } from './test.data';
-import * as stausCodes from '../../constants/statusCodes';
+import * as statusCodes from '../../constants/statusCodes';
 
 let app: App;
 let mongodb: MongoMemoryServer;
@@ -48,13 +48,13 @@ describe('messages integration tests', () => {
       const createUser = await agent.post('/auth/signup').send(user);
 
       // throw error if user creation
-      if (createUser.status === 201) {
+      if (createUser.status === statusCodes.created) {
         const loginUser = await agent
           .post('/auth/login')
           .send({ email: user.email, password: user.password });
 
         // throw error if login fails
-        if (loginUser.status !== stausCodes.success) {
+        if (loginUser.status !== statusCodes.success) {
           throw new Error('Error logging in user in beforeAll.');
         }
 
@@ -74,7 +74,7 @@ describe('messages integration tests', () => {
         .post('/messages/add/message')
         .set('Authorization', `Bearer ${token}`)
         .send({ message: { name: 'test message' } });
-      expect(response.status).toBe(stausCodes.created);
+      expect(response.status).toBe(statusCodes.created);
       expect(response.body.name).toBe('test message');
     });
 
@@ -84,17 +84,17 @@ describe('messages integration tests', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({});
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(statusCodes.badRequest);
       expect(response.body.error).toBe('missing information');
     });
 
-    it('should return 500 if user is not authenticated', async () => {
-      // Clear the session cookie
+    it('should return 401 if user is not authenticated', async () => {
+      // not setting token
       const response = await agent
         .post('/messages/add/message')
         .send({ message: { name: 'test message' } });
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(statusCodes.unauthorized);
       expect(response.body.error).toBe('Unauthorized');
     });
   });
@@ -104,7 +104,7 @@ describe('messages integration tests', () => {
       const response = await agent
         .get('/messages')
         .set('Authorization', `Bearer ${token}`);
-      expect(response.status).toBe(stausCodes.success);
+      expect(response.status).toBe(statusCodes.success);
       expect(response.body.length).toBeGreaterThan(0);
     });
   });
@@ -128,7 +128,7 @@ describe('messages integration tests', () => {
         .put(`/messages/edit/${messageId}`)
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'edited message' });
-      expect(response.status).toBe(stausCodes.success);
+      expect(response.status).toBe(statusCodes.success);
       expect(response.body.name).toBe('edited message');
     });
 
@@ -138,7 +138,7 @@ describe('messages integration tests', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({});
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(statusCodes.badRequest);
       expect(response.body.error).toBe('missing information');
     });
   });
@@ -161,7 +161,7 @@ describe('messages integration tests', () => {
       const response = await agent
         .delete(`/messages/delete/${messageId}`)
         .set('Authorization', `Bearer ${token}`);
-      expect(response.status).toBe(stausCodes.success);
+      expect(response.status).toBe(statusCodes.success);
     });
 
     it('should return 500 if message is not found', async () => {
@@ -169,7 +169,7 @@ describe('messages integration tests', () => {
         .delete(`/messages/delete/123`)
         .set('Authorization', `Bearer ${token}`);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(statusCodes.queryError);
       expect(response.body.error).toBe('Failed to delete message');
     });
   });
@@ -192,7 +192,7 @@ describe('messages integration tests', () => {
       const response = await agent
         .get(`/messages/${messageId}`)
         .set('Authorization', `Bearer ${token}`);
-      expect(response.status).toBe(stausCodes.success);
+      expect(response.status).toBe(statusCodes.success);
       expect(response.body.name).toBe('test message');
     });
   });
