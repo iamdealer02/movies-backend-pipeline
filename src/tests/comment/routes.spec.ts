@@ -26,7 +26,7 @@ jest.mock('../../middleware/authentication', () => jest.fn());
 
 describe('Testing comment routes', () => {
   let app: App;
-  
+
   beforeAll(() => {
     app = registerCoreMiddleWare();
     //  verifyToken middleware should return next() and set req.user

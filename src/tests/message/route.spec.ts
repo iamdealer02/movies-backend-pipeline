@@ -9,6 +9,7 @@ import { App } from 'supertest/types';
 import { jest } from '@jest/globals';
 import logger from '../../middleware/winston';
 import mongoose from 'mongoose';
+import * as statusCodes from '../../constants/statusCodes';
 
 // To avoid connecting to the database during testing and to avoid the open db error (openHandle error)
 jest.mock('../../boot/database/db_connect', () => ({
@@ -77,36 +78,38 @@ describe('testing messages route', () => {
       };
 
       addFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(201).json(mockResponse),
+        res.status(statusCodes.created).json(mockResponse),
       );
       const response = await request(app)
         .post('/messages/add/message')
         .send(mockResponse)
-        .expect(201);
+        .expect(statusCodes.created);
 
       expect(response.body).toEqual(mockResponse);
     });
 
     it('should return 400 status code if name or user is missing', async () => {
       addFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(400).json({ error: 'Please enter all fields' }),
+        res
+          .status(statusCodes.badRequest)
+          .json({ error: 'Please enter all fields' }),
       );
       const response = await request(app)
         .post('/messages/add/message')
         .send({ user: sampleMessageValue.user })
-        .expect(400);
+        .expect(statusCodes.badRequest);
 
       expect(response.body).toEqual({ error: 'Please enter all fields' });
     });
 
     it('should return 500 status code if server error', async () => {
       addFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(500).json({ error: 'Server Error' }),
+        res.status(statusCodes.queryError).json({ error: 'Server Error' }),
       );
       const response = await request(app)
         .post('/messages/add/message')
         .send(sampleMessageValue)
-        .expect(500);
+        .expect(statusCodes.queryError);
 
       expect(response.body).toEqual({ error: 'Server Error' });
     });
@@ -126,18 +129,22 @@ describe('testing messages route', () => {
       ];
 
       getFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(200).json(mockResponse),
+        res.status(statusCodes.success).json(mockResponse),
       );
-      const response = await request(app).get('/messages').expect(200);
+      const response = await request(app)
+        .get('/messages')
+        .expect(statusCodes.success);
 
       expect(response.body).toEqual(mockResponse);
     });
 
     it('should return 500 status code if server error', async () => {
       getFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(500).json({ error: 'Server Error' }),
+        res.status(statusCodes.queryError).json({ error: 'Server Error' }),
       );
-      const response = await request(app).get('/messages').expect(500);
+      const response = await request(app)
+        .get('/messages')
+        .expect(statusCodes.queryError);
 
       expect(response.body).toEqual({ error: 'Server Error' });
     });
@@ -159,48 +166,50 @@ describe('testing messages route', () => {
       };
 
       editFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(200).json(mockResponse),
+        res.status(statusCodes.success).json(mockResponse),
       );
       const response = await request(app)
         .put(`/messages/edit/${sampleMessageValue.user}`)
         .send(mockResponse)
-        .expect(200);
+        .expect(statusCodes.success);
 
       expect(response.body).toEqual(mockResponse);
     });
 
     it('should return 400 status code if name or messageId is missing', async () => {
       editFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(400).json({ error: 'Please enter all fields' }),
+        res
+          .status(statusCodes.badRequest)
+          .json({ error: 'Please enter all fields' }),
       );
       const response = await request(app)
         .put(`/messages/edit/${sampleMessageValue.user}`)
         .send({ user: sampleMessageValue.user })
-        .expect(400);
+        .expect(statusCodes.badRequest);
 
       expect(response.body).toEqual({ error: 'Please enter all fields' });
     });
 
     it('should return 404 status code if message is not found', async () => {
       editFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(404).json({ error: 'Message not found' }),
+        res.status(statusCodes.notFound).json({ error: 'Message not found' }),
       );
       const response = await request(app)
         .put(`/messages/edit/${sampleMessageValue.user}`)
         .send(sampleMessageValue)
-        .expect(404);
+        .expect(statusCodes.notFound);
 
       expect(response.body).toEqual({ error: 'Message not found' });
     });
 
     it('should return 500 status code if server error', async () => {
       editFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(500).json({ error: 'Server Error' }),
+        res.status(statusCodes.queryError).json({ error: 'Server Error' }),
       );
       const response = await request(app)
         .put(`/messages/edit/${sampleMessageValue.user}`)
         .send(sampleMessageValue)
-        .expect(500);
+        .expect(statusCodes.queryError);
 
       expect(response.body).toEqual({ error: 'Server Error' });
     });
@@ -215,11 +224,11 @@ describe('testing messages route', () => {
       const mockMessageId = new mongoose.Types.ObjectId().toHexString();
 
       deleteFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(200).json({ message: 'message deleted' }),
+        res.status(statusCodes.success).json({ message: 'message deleted' }),
       );
       const response = await request(app)
         .delete(`/messages/delete/${mockMessageId}`)
-        .expect(200);
+        .expect(statusCodes.success);
 
       expect(response.body).toEqual({ message: 'message deleted' });
     });
@@ -228,11 +237,13 @@ describe('testing messages route', () => {
       const mockMessageId = new mongoose.Types.ObjectId().toHexString();
 
       deleteFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(400).json({ error: 'Please enter all fields' }),
+        res
+          .status(statusCodes.badRequest)
+          .json({ error: 'Please enter all fields' }),
       );
       const response = await request(app)
         .delete(`/messages/delete/${mockMessageId}`)
-        .expect(400);
+        .expect(statusCodes.badRequest);
 
       expect(response.body).toEqual({ error: 'Please enter all fields' });
     });
@@ -241,11 +252,11 @@ describe('testing messages route', () => {
       const mockMessageId = new mongoose.Types.ObjectId().toHexString();
 
       deleteFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(500).json({ error: 'Server Error' }),
+        res.status(statusCodes.queryError).json({ error: 'Server Error' }),
       );
       const response = await request(app)
         .delete(`/messages/delete/${mockMessageId}`)
-        .expect(500);
+        .expect(statusCodes.queryError);
 
       expect(response.body).toEqual({ error: 'Server Error' });
     });
@@ -265,11 +276,11 @@ describe('testing messages route', () => {
       };
 
       getByIdFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(200).json(mockResponse),
+        res.status(statusCodes.success).json(mockResponse),
       );
       const response = await request(app)
         .get(`/messages/${mockMessageId}`)
-        .expect(200);
+        .expect(statusCodes.success);
 
       expect(response.body).toEqual(mockResponse);
     });
@@ -278,11 +289,11 @@ describe('testing messages route', () => {
       const mockMessageId = new mongoose.Types.ObjectId().toHexString();
 
       getByIdFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(404).json({ error: 'Message not found' }),
+        res.status(statusCodes.notFound).json({ error: 'Message not found' }),
       );
       const response = await request(app)
         .get(`/messages/${mockMessageId}`)
-        .expect(404);
+        .expect(statusCodes.notFound);
 
       expect(response.body).toEqual({ error: 'Message not found' });
     });
@@ -291,11 +302,11 @@ describe('testing messages route', () => {
       const mockMessageId = new mongoose.Types.ObjectId().toHexString();
 
       getByIdFunc.mockImplementation(async (_req: Request, res: Response) =>
-        res.status(500).json({ error: 'Server Error' }),
+        res.status(statusCodes.queryError).json({ error: 'Server Error' }),
       );
       const response = await request(app)
         .get(`/messages/${mockMessageId}`)
-        .expect(500);
+        .expect(statusCodes.queryError);
 
       expect(response.body).toEqual({ error: 'Server Error' });
     });

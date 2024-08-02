@@ -162,8 +162,6 @@ describe('Testing profile controller', () => {
       expect(res.json).toHaveBeenCalledWith(mockResponses.queryError);
     });
 
-
-
     // Success tests
     it('should return 200 if the password is updated successfully', async () => {
       req = getMockReq({
