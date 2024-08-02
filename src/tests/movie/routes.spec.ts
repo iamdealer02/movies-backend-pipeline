@@ -5,11 +5,12 @@ import {
   sampleMoviesGrouped,
 } from './test.data';
 import { App } from 'supertest/types';
-import { Response, Request } from 'express';
+import { Response, Request, NextFunction } from 'express';
 
 import * as moviesController from '../../controllers/movies.controller';
 import { registerCoreMiddleWare } from '../../boot/setup';
-
+import verifyToken from '../../middleware/authentication';
+import { CustomRequest } from '../../interfaces/verifyToken.interface';
 jest.mock('../../controllers/movies.controller');
 
 // To avoid connecting to the database during testing and to avoid the open db error (openHandle error)
@@ -23,11 +24,23 @@ jest.mock('../../middleware/winston', () => ({
   http: jest.fn(),
 }));
 
+// mock verifyToken middleware
+jest.mock('../../middleware/authentication', () => jest.fn());
+
 describe('Testing movies routes', () => {
   let app: App;
   const category = 'Action';
   beforeAll(() => {
     app = registerCoreMiddleWare();
+    //  verifyToken middleware should return next() and set req.user
+    (verifyToken as jest.Mock).mockImplementation(
+      (req: CustomRequest, _res: Response, next: NextFunction) => {
+        req.user = {
+          email: 'test@gmail.com',
+        };
+        next();
+      },
+    );
   });
 
   afterEach(() => {
