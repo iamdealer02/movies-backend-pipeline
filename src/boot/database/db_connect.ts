@@ -3,7 +3,6 @@ import logger from '../../middleware/winston';
 import dotenv from 'dotenv';
 
 dotenv.config();
-
 const isTestEnv = process.env.NODE_ENV === 'test';
 
 let db_config: pg.PoolConfig;
@@ -22,6 +21,7 @@ if (isTestEnv && process.env.TEST_DB_URI) {
     password: process.env.DB_PASSWORD,
     port: 5432,
     max: 10,
+    ssl: process.env.SSL === 'false' ? false : { rejectUnauthorized: false },
   };
 }
 

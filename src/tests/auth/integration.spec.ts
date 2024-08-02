@@ -93,4 +93,65 @@ describe('User Registration and Login Integration Tests', () => {
       expect(response.body).toEqual({ error: "Email or password don't match" });
     });
   });
+  describe('User Profile', () => {
+    let sessionCookie: string; // To store the session cookie
+    beforeEach(async () => {
+      // Register a user and store the session cookie
+      await request(app).post('/auth/signup').send(testUser).expect(201);
+
+      // Log in the user and store the session cookie
+      const loginResponse = await request(app)
+        .post('/auth/login')
+        .send(testUser)
+        .expect(200);
+
+      // Extract session cookie from response headers
+      sessionCookie = loginResponse.headers['set-cookie'];
+    });
+
+    it('should return 401 status code if user is not authenticated', async () => {
+      const response = await request(app).get('/users/profile').expect(401);
+      expect(response.body).toEqual({ error: 'Unauthorized' });
+    });
+
+    it('should return user profile if user is authenticated', async () => {
+      // Use the session cookie to make an authenticated request to /auth/me
+      const response = await request(app)
+        .get('/auth/me')
+        .set('Cookie', sessionCookie)
+        .expect(200);
+
+      expect(response.body).toHaveProperty('email', testUser.email);
+      expect(response.body).toHaveProperty('username', testUser.username);
+      expect(response.body).toHaveProperty('messages', []);
+      expect(response.body).toHaveProperty('created_at');
+      expect(response.body).toHaveProperty('updated_at');
+      expect(response.body).toHaveProperty('_id');
+      expect(response.body).not.toHaveProperty('password');
+    });
+  });
+
+  describe('User Logout', () => {
+    let sessionCookie: string;
+    beforeEach(async () => {
+      // Register a user
+      await request(app).post('/auth/signup').send(testUser).expect(201);
+
+      // Log in the user
+      await request(app).post('/auth/login').send(testUser).expect(200);
+    });
+    // it should logout the user and delete the session.user
+    it('should logout the user', async () => {
+      const loginResponse = await request(app)
+        .post('/auth/login')
+        .send(testUser)
+        .expect(200);
+      sessionCookie = loginResponse.headers['set-cookie'];
+      const response = await request(app)
+        .post('/auth/logout')
+        .set('Cookie', sessionCookie)
+        .expect(200);
+      expect(response.body).toEqual({ message: 'Disconnected' });
+    });
+  });
 });

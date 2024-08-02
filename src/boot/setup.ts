@@ -4,13 +4,17 @@ import helmet from 'helmet';
 import session from 'express-session';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
-
 import logger, { streamOptions } from '../middleware/winston';
 import verifyToken from '../middleware/authentication';
-import healthCheck from '../middleware/healthCheck';
 
 // Routes
+import messageRoutes from '../routes/messages.routes';
 import moviesRoutes from '../routes/movies.routes';
+import profileRoutes from '../routes/profile.routes';
+import healthCheck from '../middleware/healthCheck';
+import { validator } from '../middleware/validator';
+import notFoundMiddleware from '../middleware/notFound';
+import commentRoutes from '../routes/comment.routes';
 import authRoutes from '../routes/auth.routes';
 import usersRoutes from '../routes/users.routes';
 import ratingRoutes from '../routes/rating.routes';
@@ -49,16 +53,19 @@ const registerCoreMiddleWare = (): Application => {
     app.use(cors({})); // enabling CORS
     app.use(helmet()); // enabling helmet -> setting response headers
 
+    app.use(validator);
     // Health check route
-    app.use(healthCheck)
-
+    app.use(healthCheck);
     // Route registration
-
     app.use('/auth', authRoutes);
     app.use('/users', usersRoutes);
     app.use(verifyToken);
+    app.use('/profile', profileRoutes);
     app.use('/movies', moviesRoutes);
     app.use('/rating', ratingRoutes);
+    app.use('/comments', commentRoutes);
+    app.use('/messages', messageRoutes);
+    app.use(notFoundMiddleware);
 
     logger.http('Done registering all middlewares');
 
