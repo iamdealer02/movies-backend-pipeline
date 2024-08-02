@@ -14,7 +14,7 @@ module.exports = {
       node: true,
       jest: true,
     },
-    ignorePatterns: ['.eslintrc.js'],
+    ignorePatterns: ['.eslintrc.js', 'node_modules/', 'dist/', 'logs/'],
     plugins: ['@typescript-eslint'],
     rules:{
       "@typescript-eslint/interface-name-prefix":"off",
