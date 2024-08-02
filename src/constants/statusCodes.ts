@@ -7,6 +7,7 @@ const unauthorized: number = 401;
 const badRequest: number = 400;
 const userAlreadyExists: number = 409;
 
+
 export {
   queryError,
   created,
@@ -15,5 +16,5 @@ export {
   success,
   unauthorized,
   badRequest,
-  userAlreadyExists,
+  userAlreadyExists
 };

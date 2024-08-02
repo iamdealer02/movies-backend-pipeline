@@ -17,6 +17,7 @@ import notFoundMiddleware from '../middleware/notFound';
 import commentRoutes from '../routes/comment.routes';
 import authRoutes from '../routes/auth.routes';
 import usersRoutes from '../routes/users.routes';
+import ratingRoutes from '../routes/rating.routes';
 
 const app: Application = express();
 const PORT: number = parseInt(process.env.PORT) || 3000;
@@ -61,6 +62,7 @@ const registerCoreMiddleWare = (): Application => {
     app.use(verifyToken);
     app.use('/profile', profileRoutes);
     app.use('/movies', moviesRoutes);
+    app.use('/rating', ratingRoutes);
     app.use('/comments', commentRoutes);
     app.use('/messages', messageRoutes);
     app.use(notFoundMiddleware);
