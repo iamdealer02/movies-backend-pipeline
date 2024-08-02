@@ -8,6 +8,7 @@ import logger, { streamOptions } from '../middleware/winston';
 import verifyToken from '../middleware/authentication';
 
 // Routes
+import messageRoutes from '../routes/messages.routes';
 import moviesRoutes from '../routes/movies.routes';
 import profileRoutes from '../routes/profile.routes';
 import healthCheck from '../middleware/healthCheck';
@@ -61,7 +62,7 @@ const registerCoreMiddleWare = (): Application => {
     app.use('/profile', profileRoutes);
     app.use('/movies', moviesRoutes);
     app.use('/comments', commentRoutes);
-
+    app.use('/messages', messageRoutes);
     app.use(notFoundMiddleware);
 
     logger.http('Done registering all middlewares');
